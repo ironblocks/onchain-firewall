@@ -26,7 +26,7 @@ existing policies that can be used by the hooks are:
 - Circuit breaker
 - Bypass mechanism
 
-![diagram-firewall hook](https://github.com/ironblocks/onchain-firewall/contracts/uniswap-hooks/general_uniswap_hook.png<>)
+![diagram-firewall hook](https://github.com/ironblocks/onchain-firewall/contracts/uniswap-hooks/general_uniswap_hook.png)
 
 ## Use cases
 
@@ -53,3 +53,4 @@ existing policies that can be used by the hooks are:
 - if the call is approved then the user can use the pool but it hasn't then the hook can block this call
 
 
+P
