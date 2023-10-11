@@ -26,7 +26,7 @@ existing policies that can be used by the hooks are:
 - Circuit breaker
 - Bypass mechanism
 
-![diagram-firewall hook](https://github.com/ironblocks/onchain-firewall/contracts/uniswap-hooks/general_uniswap_hook.png)
+![diagram-firewall hook](https://github.com/ironblocks/onchain-firewall/blob/main/contracts/uniswap-hooks/general_uniswap_hook.png)
 
 ## Use cases
 
