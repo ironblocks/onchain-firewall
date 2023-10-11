@@ -51,6 +51,3 @@ existing policies that can be used by the hooks are:
 - The end user can send the signature to the protocol
 - Then the end user will call the pool and the relevant hook will check with the firewall that the call has been approved
 - if the call is approved then the user can use the pool but it hasn't then the hook can block this call
-
-
-P
