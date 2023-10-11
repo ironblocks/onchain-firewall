@@ -26,7 +26,7 @@ existing policies that can be used by the hooks are:
 - Circuit breaker
 - Bypass mechanism
 
-![diagram-firewall hook](https://github.com/ironblocks/onchain-firewall/blob/main/contracts/uniswap-hooks/general_uniswap_hook.png)
+![diagram-firewall general_hook](https://github.com/ironblocks/onchain-firewall/blob/main/contracts/uniswap-hooks/general_uniswap_hook.png)
 
 ## Use cases
 
@@ -37,11 +37,15 @@ existing policies that can be used by the hooks are:
 - The beforeSwap hook will check the relevant call sequence in the firewall (after the deposit & withdraw already saved in the firewall memory)
 - The policy will block this sequence and the beforeSwap will stop this malicious swap
 
+![diagram-firewall call_sequences_hook](https://github.com/ironblocks/onchain-firewall/blob/main/contracts/uniswap-hooks/call_sequences_hook_flow.png)
+
 ### circuit breaker
 
 - Let's say that part of the risk modeling of the dApp is that the liquidity removal of the pool can't exceed 1,000,000 $ a day
 - When the end user will burn his position of liquidity the beforeModifyPosition hook will call the firewall that will check the invariant according to the risk modeling
 - And if the liquidity that has been removed that day is exceeded the threshold by that transaction than the hook can block it with firewall response
+
+![diagram-firewall call_sequences_hook](https://github.com/ironblocks/onchain-firewall/blob/main/contracts/uniswap-hooks/circuit_breaker_hook_flow.png)
 
 ### bypass mechanism
 
@@ -51,3 +55,5 @@ existing policies that can be used by the hooks are:
 - The end user can send the signature to the protocol
 - Then the end user will call the pool and the relevant hook will check with the firewall that the call has been approved
 - if the call is approved then the user can use the pool but it hasn't then the hook can block this call
+
+![diagram-firewall call_sequences_hook](https://github.com/ironblocks/onchain-firewall/blob/main/contracts/uniswap-hooks/approved_calls_hook_flow.png)
