@@ -1,5 +1,5 @@
 const { expect } = require('chai');
-const { ethers, upgrades } = require('hardhat');
+const { ethers } = require('hardhat');
 
 describe('Firewall', function () {
     let owner, addr1, addr2;
@@ -13,13 +13,13 @@ describe('Firewall', function () {
         const SampleConsumerFactory = await ethers.getContractFactory(
             'SampleConsumer'
         );
-        firewall = await upgrades.deployProxy(FirewallFactory, []);
+        firewall = await FirewallFactory.deploy();
         sampleConsumer = await SampleConsumerFactory.deploy(firewall.address);
     });
 
     it('Firewall consumer settings', async function () {
         const FirewallFactory = await ethers.getContractFactory('Firewall');
-        const firewall2 = await upgrades.deployProxy(FirewallFactory, []);
+        const firewall2 = await FirewallFactory.deploy();
         await expect(
             sampleConsumer.connect(addr2).setFirewall(firewall2.address)
         ).to.be.revertedWith('FirewallConsumer: not firewall admin');
@@ -51,7 +51,7 @@ describe('Firewall', function () {
                 .removePolicy(
                     sampleConsumer.address,
                     ZERO_METHOD_SIG,
-                    0
+                    ZERO_ADDRESS
                 )
         ).to.be.revertedWith('Firewall: not consumer admin');
     });
@@ -121,7 +121,7 @@ describe('Firewall', function () {
                     allowlistPolicy.address
                 )
         ).to.be.revertedWith('Firewall: policy already exists');
-        await firewall.removePolicy(sampleConsumer.address, ZERO_METHOD_SIG, 1);
+        await firewall.removePolicy(sampleConsumer.address, ZERO_METHOD_SIG, approvedCallsPolicy.address);
         expect(
             await firewall.getActivePolicies(
                 sampleConsumer.address,

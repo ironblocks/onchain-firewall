@@ -1,6 +1,6 @@
 # <img src="ironblocks-logo.svg" alt="Ironblocks" height="40px">
 
-[![NPM Package](https://img.shields.io/npm/v/@ironblocks/firewall.svg)](https://www.npmjs.org/package/@ironblocks/firewall)
+[![NPM Package](https://img.shields.io/npm/v/@ironblocks/firewall-consumer.svg)](https://www.npmjs.org/package/@ironblocks/firewall-consumer)
 
 **A Solidity library providing an open marketplace of access control policies.** Build on a constantly growing community of open source policies.
 
@@ -18,7 +18,7 @@ This collection of smart contracts can be thought of as an open marketplace of u
 ### Installation
 
 ```
-$ npm install @ironblocks/firewall
+$ npm install @ironblocks/firewall-consumer
 ```
 
 An alternative to npm is to use the GitHub repository (`ironblocks/firewall`) to retrieve the contracts. When doing this, make sure to specify the tag for a release such as `v4.5.0`, instead of using the `master` branch.
@@ -28,12 +28,11 @@ An alternative to npm is to use the GitHub repository (`ironblocks/firewall`) to
 Once installed, you can use the contracts in the library by importing them:
 
 ```solidity
-pragma solidity ^0.8.0;
+pragma solidity 0.8.19;
 
-import "@ironblocks/firewall/contracts/FirewallConsumer.sol";
+import "@ironblocks/firewall-consumer/contracts/FirewallConsumer.sol";
 
 contract MyProtectedContract is FirewallConsumer {
-    // TODO: firewall fixed address? admin default msg.sender?
     constructor() {
     }
 

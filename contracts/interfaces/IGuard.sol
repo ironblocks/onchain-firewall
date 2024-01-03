@@ -1,5 +1,7 @@
-// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+// SPDX-License-Identifier: UNLICENSED
+// See LICENSE file for full license text.
+// Copyright (c) Ironblocks 2023
+pragma solidity 0.8.19;
 
 import "./IERC165.sol";
 

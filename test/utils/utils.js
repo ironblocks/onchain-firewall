@@ -108,7 +108,19 @@ const execSafeTx = async (safe, tx, signers) => {
     )
 };
 
+async function approveVectors(vectors, approvedVectorsPolicy) {
+    for (const vector of vectors) {
+        for (let i = 0; i < vector.length; i++) {
+          const currentVector = vector.slice(0, i + 1);
+          const typesArray = Array(i+1).fill('bytes4');
+          const vectorHash = ethers.utils.solidityKeccak256(typesArray, currentVector);
+          await approvedVectorsPolicy.setVectorHashStatus(vectorHash, true);
+        }
+      }
+}
+
 module.exports = {
     getSafeExecTxArgs,
-    execSafeTx
+    execSafeTx,
+    approveVectors
 }

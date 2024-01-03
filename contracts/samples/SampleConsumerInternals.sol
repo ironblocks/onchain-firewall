@@ -8,7 +8,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-contract SampleConsumer is Ownable, FirewallConsumerBase {
+contract SampleConsumerInternals is Ownable, FirewallConsumerBase {
 
     mapping (address => uint) public deposits;
     mapping (address => mapping (address => uint)) public tokenDeposits;
@@ -16,10 +16,24 @@ contract SampleConsumer is Ownable, FirewallConsumerBase {
     constructor(address firewall) FirewallConsumerBase(firewall, msg.sender) {}
 
     function deposit() external payable firewallProtected {
-        deposits[msg.sender] += msg.value;
+        _deposit(msg.value);
+    }
+
+    function _deposit(uint amount) internal firewallProtectedCustom(abi.encodePacked(bytes4(0x9213b124))) {
+        deposits[msg.sender] += amount;
     }
 
     function withdraw(uint amount) external firewallProtected {
+        _withdraw(amount);
+    }
+
+    function withdrawMany(uint amounts, uint times) external firewallProtected {
+        for (uint i = 0; i < times; i++) {
+            _withdraw(amounts);
+        }
+    }
+
+    function _withdraw(uint amount) internal firewallProtectedCustom(abi.encodePacked(bytes4(0xac6a2b5d))) {
         deposits[msg.sender] -= amount;
         Address.sendValue(payable(msg.sender), amount);
     }

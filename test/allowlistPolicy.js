@@ -1,5 +1,5 @@
 const { expect } = require('chai');
-const { ethers, upgrades } = require('hardhat');
+const { ethers } = require('hardhat');
 
 describe('Allowlist Policy', function () {
     let addr1, addr2;
@@ -11,7 +11,7 @@ describe('Allowlist Policy', function () {
         const SampleConsumerFactory = await ethers.getContractFactory(
             'SampleConsumer'
         );
-        firewall = await upgrades.deployProxy(FirewallFactory, []);
+        firewall = await FirewallFactory.deploy();
         sampleConsumer = await SampleConsumerFactory.deploy(firewall.address);
         sampleConsumerIface = SampleConsumerFactory.interface;
     });

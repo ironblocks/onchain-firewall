@@ -1,5 +1,5 @@
 const { expect } = require('chai');
-const { ethers, upgrades } = require('hardhat');
+const { ethers } = require('hardhat');
 
 describe('Approved Calls Policy', function () {
     let owner, addr1, addr2;
@@ -11,7 +11,8 @@ describe('Approved Calls Policy', function () {
         const SampleConsumerFactory = await ethers.getContractFactory(
             'SampleConsumer'
         );
-        firewall = await upgrades.deployProxy(FirewallFactory, []);
+        // firewall = await FirewallFactory.deploy();
+        firewall = await FirewallFactory.deploy();
         sampleConsumer = await SampleConsumerFactory.deploy(firewall.address);
         sampleConsumerIface = SampleConsumerFactory.interface;
     });
@@ -305,7 +306,6 @@ describe('Approved Calls Policy', function () {
                 [`0x${'00'.repeat(32)}`],
                 0,
                 addr2.address,
-                addr2.address
             )
         ).to.be.revertedWith(`AccessControl: account ${addr1.address.toLowerCase()} is missing role 0xe2f4eaae4a9751e85a3e4a7b9587827a877f29914755229b07a7b2da98285f70`);
     });
@@ -372,13 +372,13 @@ describe('Approved Calls Policy', function () {
             ]
         );
         const packed = ethers.utils.solidityPack(
-            ['bytes32[]', 'uint256', 'address', 'address', 'uint256'],
+            ['bytes32[]', 'uint256', 'address', 'uint256', 'uint256'],
             [
                 [withdrawCallHash, depositCallHash],
                 ethers.utils.parseEther('1'), // expiration, yuge numba
                 addr1.address,
-                sampleContractUser.address,
-                0
+                0,
+                31337, // hardhat chainid
             ]
         );
         const messageHash = ethers.utils.solidityKeccak256(
@@ -391,7 +391,6 @@ describe('Approved Calls Policy', function () {
             [withdrawCallHash, depositCallHash],
             ethers.utils.parseEther('1'),
             addr1.address,
-            sampleContractUser.address,
             0,
             signature
         );

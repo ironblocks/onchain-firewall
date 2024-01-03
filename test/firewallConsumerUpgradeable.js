@@ -1,5 +1,7 @@
 const { expect } = require('chai');
-const { ethers, upgrades } = require('hardhat');
+const { ethers } = require('hardhat');
+
+const ETH_ADDRESS = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE';
 
 describe('Firewall Consumer Upgradeable', function () {
     let owner, addr1, addr2, firewallProxyAdmin, firewallAdmin;
@@ -8,7 +10,7 @@ describe('Firewall Consumer Upgradeable', function () {
     beforeEach(async function () {
         [owner, addr1, addr2, firewallAdmin] = await ethers.getSigners();
         const FirewallFactory = await ethers.getContractFactory('Firewall');
-        firewall = await upgrades.deployProxy(FirewallFactory, []);
+        firewall = await FirewallFactory.deploy();
         const FirewallProxyAdminFactory = await ethers.getContractFactory('FirewallProxyAdmin');
         firewallProxyAdmin = await FirewallProxyAdminFactory.deploy();
         const FirewallTransparentUpgradeableProxyFactory = await ethers.getContractFactory(
@@ -333,12 +335,14 @@ describe('Firewall Consumer Upgradeable', function () {
         );
         await expect(
             balanceChangePolicy.connect(addr1).setConsumerMaxBalanceChange(
-            sampleConsumer.address,
-            ethers.utils.parseEther('25')
+                sampleConsumer.address,
+                ETH_ADDRESS,
+                ethers.utils.parseEther('25')
         )
         ).to.be.revertedWith('Ownable: caller is not the owner');
         await balanceChangePolicy.setConsumerMaxBalanceChange(
             sampleConsumer.address,
+            ETH_ADDRESS,
             ethers.utils.parseEther('25')
         );
         await expect(

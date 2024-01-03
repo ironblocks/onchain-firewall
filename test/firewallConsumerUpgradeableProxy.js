@@ -1,5 +1,7 @@
 const { expect } = require('chai');
-const { ethers, upgrades } = require('hardhat');
+const { ethers } = require('hardhat');
+
+const ETH_ADDRESS = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE';
 
 // This tests an existing TransparentUpgradeableProxy contract that has been deployed regularly,
 // and then upgraded to point it's implementation to the FirewallTransparentUpgradeableProxy contract.
@@ -10,7 +12,7 @@ describe('Firewall Consumer Upgradeable Proxy', function () {
     beforeEach(async function () {
         [owner, addr1, addr2, firewallAdmin] = await ethers.getSigners();
         const FirewallFactory = await ethers.getContractFactory('Firewall');
-        firewall = await upgrades.deployProxy(FirewallFactory, []);
+        firewall = await FirewallFactory.deploy();
         const ProxyAdminFactory = await ethers.getContractFactory('ProxyAdmin');
         proxyAdmin = await ProxyAdminFactory.deploy();
         const TransparentUpgradeableProxyFactory = await ethers.getContractFactory(
@@ -34,7 +36,6 @@ describe('Firewall Consumer Upgradeable Proxy', function () {
         firewallProxyIntercept = await FirewallProxyInterceptFactory.deploy(
             sampleConsumerImplementation.address,
             proxyAdmin.address,
-            '0x'
         );
         // await proxyAdmin.changeProxyAdmin(sampleConsumerProxy.address, proxyAdmin.address);
         await proxyAdmin.upgradeAndCall(
@@ -392,12 +393,14 @@ describe('Firewall Consumer Upgradeable Proxy', function () {
         );
         await expect(
             balanceChangePolicy.connect(addr1).setConsumerMaxBalanceChange(
-            sampleConsumer.address,
-            ethers.utils.parseEther('25')
+                sampleConsumer.address,
+                ETH_ADDRESS,
+                ethers.utils.parseEther('25')
         )
         ).to.be.revertedWith('Ownable: caller is not the owner');
         await balanceChangePolicy.setConsumerMaxBalanceChange(
             sampleConsumer.address,
+            ETH_ADDRESS,
             ethers.utils.parseEther('25')
         );
         await expect(

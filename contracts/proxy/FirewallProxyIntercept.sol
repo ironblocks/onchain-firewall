@@ -1,5 +1,7 @@
-// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+// SPDX-License-Identifier: UNLICENSED
+// See LICENSE file for full license text.
+// Copyright (c) Ironblocks 2023
+pragma solidity 0.8.19;
 
 import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
@@ -28,11 +30,10 @@ contract FirewallProxyIntercept is TransparentUpgradeableProxy, IFirewallConsume
      */
     constructor(
         address _logic,
-        address admin_,
-        bytes memory _data
+        address admin_
     )
         payable
-        TransparentUpgradeableProxy(_logic, admin_, _data)
+        TransparentUpgradeableProxy(_logic, admin_, new bytes(0))
     {}
 
     function initialize(
@@ -63,13 +64,13 @@ contract FirewallProxyIntercept is TransparentUpgradeableProxy, IFirewallConsume
      * the subscribed policies.
      */
     modifier firewallProtected() {
-        // Skip if view function
-        if (_isStaticCall()) {
+        address _firewall = _getFirewall();
+        // Skip if view function or firewall disabled
+        if (_firewall == address(0) || _isStaticCall()) {
             _;
             return;
         }
 
-        address _firewall = _getFirewall();
         uint value;
         // We do this because msg.value can only be accessed in payable functions.
         assembly {

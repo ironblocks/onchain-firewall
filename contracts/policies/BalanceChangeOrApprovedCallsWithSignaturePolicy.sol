@@ -4,9 +4,11 @@
 pragma solidity 0.8.19;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "../interfaces/IFirewallPolicy.sol";
 
-contract ApprovedCallsWithSignaturePolicy is IFirewallPolicy, AccessControl {
+contract BalanceChangeOrApprovedCallsWithSignaturePolicy is IFirewallPolicy, AccessControl {
+    address public constant ETH = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
     bytes32 public constant SIGNER_ROLE = keccak256("SIGNER_ROLE");
 
     // We use this to get the trace as if the tx is approved by overriding the storage slot in the debug trace call
@@ -14,10 +16,20 @@ contract ApprovedCallsWithSignaturePolicy is IFirewallPolicy, AccessControl {
 
     // tx.origin => callHashes
     mapping (address => bytes32[]) public approvedCalls;
+    // tx.origin => blockNum => bool
+    mapping (address => mapping (uint => bool)) public isOriginUsingApprovedCalls;
     // tx.origin => time of approved calls
     mapping (address => uint256) public approvedCallsExpiration;
     // tx.origin => nonce
     mapping (address => uint256) public nonces;
+
+    // consumer => token => uint
+    mapping (address => mapping (address => uint)) public consumerMaxBalanceChange;
+    // consumer => token => uint[]
+    mapping (address => mapping(address => uint[])) public consumerLastBalance;
+
+    mapping (address => address[]) private _consumerTokens;
+    mapping (address => mapping(address => bool)) private _monitoringToken;
 
     constructor() {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
@@ -33,16 +45,45 @@ contract ApprovedCallsWithSignaturePolicy is IFirewallPolicy, AccessControl {
      */
     function preExecution(address consumer, address sender, bytes calldata data, uint value) external notInSimulation override {
         bytes32[] storage approvedCallHashes = approvedCalls[tx.origin];
-        require(approvedCallHashes.length > 0, "ApprovedCallsWithSignaturePolicy: call hashes empty");
-        uint expiration = approvedCallsExpiration[tx.origin];
-        require(expiration > block.timestamp, "ApprovedCallsWithSignaturePolicy: expired");
-        bytes32 callHash = getCallHash(consumer, sender, tx.origin, data, value);
-        bytes32 nextHash = approvedCallHashes[approvedCallHashes.length - 1];
-        require(callHash == nextHash, "ApprovedCallsWithSignaturePolicy: invalid call hash");
-        approvedCallHashes.pop();
+        if (isOriginUsingApprovedCalls[tx.origin][block.number]) {
+            require(approvedCallHashes.length > 0, "ApprovedCallsWithSignaturePolicy: call hashes empty");
+            uint expiration = approvedCallsExpiration[tx.origin];
+            require(expiration > block.timestamp, "ApprovedCallsWithSignaturePolicy: expired");
+            bytes32 callHash = getCallHash(consumer, sender, tx.origin, data, value);
+            bytes32 nextHash = approvedCallHashes[approvedCallHashes.length - 1];
+            require(callHash == nextHash, "ApprovedCallsWithSignaturePolicy: invalid call hash");
+            approvedCallHashes.pop();
+        } else if (approvedCallHashes.length > 0) {
+            isOriginUsingApprovedCalls[tx.origin][block.number] = true;
+            uint expiration = approvedCallsExpiration[tx.origin];
+            require(expiration > block.timestamp, "ApprovedCallsWithSignaturePolicy: expired");
+            bytes32 callHash = getCallHash(consumer, sender, tx.origin, data, value);
+            bytes32 nextHash = approvedCallHashes[approvedCallHashes.length - 1];
+            require(callHash == nextHash, "ApprovedCallsWithSignaturePolicy: invalid call hash");
+            approvedCallHashes.pop();
+        } else {
+            address[] memory consumerTokens = _consumerTokens[consumer];
+            for (uint i = 0; i < consumerTokens.length; i++) {
+                address token = consumerTokens[i];
+                uint preBalance = token == ETH ? address(consumer).balance - value : IERC20(token).balanceOf(consumer);
+                consumerLastBalance[consumer][token].push(preBalance);
+            }
+        }
     }
 
-    function postExecution(address, address, bytes calldata, uint) external override {
+    function postExecution(address consumer, address, bytes calldata, uint) external override {
+        if (!isOriginUsingApprovedCalls[tx.origin][block.number]) {
+            address[] memory consumerTokens = _consumerTokens[consumer];
+            for (uint i = 0; i < consumerTokens.length; i++) {
+                address token = consumerTokens[i];
+                uint[] storage lastBalanceArray = consumerLastBalance[consumer][token];
+                uint lastBalance = lastBalanceArray[lastBalanceArray.length - 1];
+                uint postBalance = token == ETH ? address(consumer).balance : IERC20(token).balanceOf(consumer);
+                uint difference = postBalance >= lastBalance ? postBalance - lastBalance : lastBalance - postBalance;
+                require(difference <= consumerMaxBalanceChange[consumer][token], "BalanceChangePolicy: Balance change exceeds limit");
+                lastBalanceArray.pop();
+            }
+        }
     }
 
     /**
@@ -68,6 +109,34 @@ contract ApprovedCallsWithSignaturePolicy is IFirewallPolicy, AccessControl {
         approvedCalls[txOrigin] = _callHashes;
         approvedCallsExpiration[txOrigin] = expiration;
         nonces[txOrigin] = nonce + 1;
+    }
+
+    function removeToken(
+        address consumer,
+        address token
+    ) external onlyRole(SIGNER_ROLE) {
+        address[] storage consumerTokens = _consumerTokens[consumer];
+        for (uint i = 0; i < consumerTokens.length; i++) {
+            if (token == consumerTokens[i]) {
+                consumerTokens[i] = consumerTokens[consumerTokens.length - 1];
+                consumerTokens.pop();
+                break;
+            }
+        }
+        consumerMaxBalanceChange[consumer][token] = 0;
+        _monitoringToken[consumer][token] = false;
+    }
+
+    function setConsumerMaxBalanceChange(
+        address consumer,
+        address token,
+        uint maxBalanceChange
+    ) external onlyRole(SIGNER_ROLE) {
+        consumerMaxBalanceChange[consumer][token] = maxBalanceChange;
+        if (!_monitoringToken[consumer][token]) {
+            _consumerTokens[consumer].push(token);
+            _monitoringToken[consumer][token] = true;
+        }
     }
 
     function approveCalls(
@@ -135,6 +204,10 @@ contract ApprovedCallsWithSignaturePolicy is IFirewallPolicy, AccessControl {
         }
 
         // implicitly return (r, s, v)
+    }
+
+    function getConsumerTokens(address consumer) external view returns (address[] memory) {
+        return _consumerTokens[consumer];
     }
 
     function _is_executing_simulation() private view returns (bool is_executing_simulation) {

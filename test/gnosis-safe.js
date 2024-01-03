@@ -1,5 +1,5 @@
 const { expect } = require('chai');
-const { ethers, upgrades } = require('hardhat');
+const { ethers } = require('hardhat');
 const GnosisSafeArtifact = require('@gnosis.pm/safe-contracts/build/artifacts/contracts/GnosisSafe.sol/GnosisSafe.json');
 const GnosisSafeProxyArtifact = require('@gnosis.pm/safe-contracts/build/artifacts/contracts/proxies/GnosisSafeProxy.sol/GnosisSafeProxy.json');
 
@@ -14,7 +14,7 @@ describe('Firewall (Safe integration)', function () {
     beforeEach(async function () {
         [owner, addr1, addr2, signer1, signer2] = await ethers.getSigners();
         const FirewallFactory = await ethers.getContractFactory('Firewall');
-        firewall = await upgrades.deployProxy(FirewallFactory, []);
+        firewall = await FirewallFactory.deploy();
 
         const GnosisSafe = await ethers.getContractFactoryFromArtifact(
             GnosisSafeArtifact
