@@ -3,11 +3,14 @@
 // Copyright (c) Ironblocks 2023
 pragma solidity 0.8.19;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "../interfaces/IFirewallPolicy.sol";
+import "./FirewallPolicyBase.sol";
 
-contract BalanceChangePolicy is IFirewallPolicy, Ownable {
+/**
+ * @dev This policy asserts that a consumer contracts balance change (for eth or tokens) doesn't
+ * exceed a configurable amount for a function call.
+ */
+contract BalanceChangePolicy is FirewallPolicyBase {
     address public constant ETH = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
     // consumer => token => uint
@@ -18,7 +21,11 @@ contract BalanceChangePolicy is IFirewallPolicy, Ownable {
     mapping (address => address[]) private _consumerTokens;
     mapping (address => mapping(address => bool)) private _monitoringToken;
 
-    function preExecution(address consumer, address, bytes memory, uint value) external override {
+    constructor(address _firewallAddress) FirewallPolicyBase() {
+        authorizedExecutors[_firewallAddress] = true;
+    }
+
+    function preExecution(address consumer, address, bytes memory, uint value) external isAuthorized(consumer) {
         address[] memory consumerTokens = _consumerTokens[consumer];
         for (uint i = 0; i < consumerTokens.length; i++) {
             address token = consumerTokens[i];
@@ -27,7 +34,7 @@ contract BalanceChangePolicy is IFirewallPolicy, Ownable {
         }
     }
 
-    function postExecution(address consumer, address, bytes memory, uint) external override {
+    function postExecution(address consumer, address, bytes memory, uint) external isAuthorized(consumer) {
         address[] memory consumerTokens = _consumerTokens[consumer];
         for (uint i = 0; i < consumerTokens.length; i++) {
             address token = consumerTokens[i];
@@ -43,7 +50,7 @@ contract BalanceChangePolicy is IFirewallPolicy, Ownable {
     function removeToken(
         address consumer,
         address token
-    ) external onlyOwner {
+    ) external onlyRole(POLICY_ADMIN_ROLE) {
         address[] storage consumerTokens = _consumerTokens[consumer];
         for (uint i = 0; i < consumerTokens.length; i++) {
             if (token == consumerTokens[i]) {
@@ -60,7 +67,7 @@ contract BalanceChangePolicy is IFirewallPolicy, Ownable {
         address consumer,
         address token,
         uint maxBalanceChange
-    ) external onlyOwner {
+    ) external onlyRole(POLICY_ADMIN_ROLE) {
         consumerMaxBalanceChange[consumer][token] = maxBalanceChange;
         if (!_monitoringToken[consumer][token]) {
             _consumerTokens[consumer].push(token);

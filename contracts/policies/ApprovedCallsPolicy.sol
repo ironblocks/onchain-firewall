@@ -3,10 +3,16 @@
 // Copyright (c) Ironblocks 2023
 pragma solidity 0.8.19;
 
-import "@openzeppelin/contracts/access/AccessControl.sol";
-import "../interfaces/IFirewallPolicy.sol";
+import "./FirewallPolicyBase.sol";
 
-contract ApprovedCallsWithSignaturePolicy is IFirewallPolicy, AccessControl {
+/**
+ * @dev This policy requires a transaction to a consumer to be signed and approved on chain before execution.
+ *
+ * This works by approving the ordered sequence of calls that must be made, and then asserting at each step
+ * that the next call is as expected. Note that this doesn't assert that the entire sequence is executed.
+ *
+ */
+contract ApprovedCallsPolicy is FirewallPolicyBase {
     bytes32 public constant SIGNER_ROLE = keccak256("SIGNER_ROLE");
 
     // We use this to get the trace as if the tx is approved by overriding the storage slot in the debug trace call
@@ -19,8 +25,8 @@ contract ApprovedCallsWithSignaturePolicy is IFirewallPolicy, AccessControl {
     // tx.origin => nonce
     mapping (address => uint256) public nonces;
 
-    constructor() {
-        _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
+    constructor(address _firewallAddress) FirewallPolicyBase() {
+        authorizedExecutors[_firewallAddress] = true;
     }
 
     modifier notInSimulation() {
@@ -31,14 +37,14 @@ contract ApprovedCallsWithSignaturePolicy is IFirewallPolicy, AccessControl {
     /**
      * @dev Before executing a call, check that the call has been approved by a signer.
      */
-    function preExecution(address consumer, address sender, bytes calldata data, uint value) external notInSimulation override {
+    function preExecution(address consumer, address sender, bytes calldata data, uint value) external notInSimulation isAuthorized(consumer) {
         bytes32[] storage approvedCallHashes = approvedCalls[tx.origin];
-        require(approvedCallHashes.length > 0, "ApprovedCallsWithSignaturePolicy: call hashes empty");
+        require(approvedCallHashes.length > 0, "ApprovedCallsPolicy: call hashes empty");
         uint expiration = approvedCallsExpiration[tx.origin];
-        require(expiration > block.timestamp, "ApprovedCallsWithSignaturePolicy: expired");
+        require(expiration > block.timestamp, "ApprovedCallsPolicy: expired");
         bytes32 callHash = getCallHash(consumer, sender, tx.origin, data, value);
         bytes32 nextHash = approvedCallHashes[approvedCallHashes.length - 1];
-        require(callHash == nextHash, "ApprovedCallsWithSignaturePolicy: invalid call hash");
+        require(callHash == nextHash, "ApprovedCallsPolicy: invalid call hash");
         approvedCallHashes.pop();
     }
 
@@ -60,11 +66,11 @@ contract ApprovedCallsWithSignaturePolicy is IFirewallPolicy, AccessControl {
         uint nonce,
         bytes memory signature
     ) external {
-        require(nonce == nonces[txOrigin], "ApprovedCallsWithSignaturePolicy: invalid nonce");
+        require(nonce == nonces[txOrigin], "ApprovedCallsPolicy: invalid nonce");
         bytes32 messageHash = keccak256(abi.encodePacked(_callHashes, expiration, txOrigin, nonce, block.chainid));
         bytes32 ethSignedMessageHash = getEthSignedMessageHash(messageHash);
         address signer = recoverSigner(ethSignedMessageHash, signature);
-        require(hasRole(SIGNER_ROLE, signer), "ApprovedCallsWithSignaturePolicy: invalid signer");
+        require(hasRole(SIGNER_ROLE, signer), "ApprovedCallsPolicy: invalid signer");
         approvedCalls[txOrigin] = _callHashes;
         approvedCallsExpiration[txOrigin] = expiration;
         nonces[txOrigin] = nonce + 1;

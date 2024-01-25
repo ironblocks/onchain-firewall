@@ -1,308 +1,120 @@
 const { expect } = require('chai');
 const { ethers } = require('hardhat');
 
-describe('Approved Calls Policy', function () {
+describe('Approved Calls Policy', () => {
     let owner, addr1, addr2;
-    let firewall, sampleConsumer, sampleConsumerIface;
+    let firewall, sampleConsumer, sampleConsumerIface, sampleContractUser;
+    let approvedCallsPolicy, approvedCallsPolicyIface;
+    
+    function createDepositCallHash(
+        consumerAddress,
+        senderAddress,
+        originAddress,
+        value,
+    ) {
+        const depositPayload = sampleConsumerIface.encodeFunctionData('deposit()');
+        const depositCallHash = ethers.utils.solidityKeccak256(
+            ['address', 'address', 'address', 'bytes', 'uint256'],
+            [
+                consumerAddress,
+                senderAddress,
+                originAddress,
+                depositPayload,
+                value,
+            ]
+        );
+        return depositCallHash;
+    }
 
-    beforeEach(async function () {
+    function createWithdrawCallHash(
+        consumerAddress,
+        senderAddress,
+        originAddress,
+        value,
+    ) {
+        const withdrawPayload = sampleConsumerIface.encodeFunctionData('withdraw(uint256)', [value]);
+        const withdrawCallHash = ethers.utils.solidityKeccak256(
+            ['address', 'address', 'address', 'bytes', 'uint256'],
+            [
+                consumerAddress,
+                senderAddress,
+                originAddress,
+                withdrawPayload,
+                ethers.utils.parseEther('0'),
+            ]
+        );
+        return withdrawCallHash;
+    }
+
+    async function createSignature(
+        signer,
+        callHashes,
+        expiration,
+        origin,
+        nonce,
+    ) {
+        const packed = ethers.utils.solidityPack(
+            ['bytes32[]', 'uint256', 'address', 'uint256', 'uint256'],
+            [
+                callHashes,
+                expiration,
+                origin,
+                nonce,
+                31337, // hardhat chainid
+            ]
+        );
+        const messageHash = ethers.utils.solidityKeccak256(
+            ['bytes'], [packed]
+        );
+        const messageHashBytes = ethers.utils.arrayify(messageHash)
+        const signature = await signer.signMessage(messageHashBytes);
+        return signature;
+    }
+
+    beforeEach(async () => {
         [owner, addr1, addr2] = await ethers.getSigners();
         const FirewallFactory = await ethers.getContractFactory('Firewall');
         const SampleConsumerFactory = await ethers.getContractFactory(
             'SampleConsumer'
         );
-        // firewall = await FirewallFactory.deploy();
+        const SampleContractUser = await ethers.getContractFactory(
+            'SampleContractUser'
+        );
+        const ApprovedCallsPolicy = await ethers.getContractFactory(
+            'ApprovedCallsPolicy'
+        );
+
         firewall = await FirewallFactory.deploy();
+
+        approvedCallsPolicy = await ApprovedCallsPolicy.deploy(firewall.address);
         sampleConsumer = await SampleConsumerFactory.deploy(firewall.address);
+        sampleContractUser = await SampleContractUser.deploy();
         sampleConsumerIface = SampleConsumerFactory.interface;
+        approvedCallsPolicyIface = ApprovedCallsPolicy.interface;
+        sampleContractUser = await SampleContractUser.deploy();
+
+        await approvedCallsPolicy.grantRole(ethers.utils.keccak256(ethers.utils.toUtf8Bytes('SIGNER_ROLE')), owner.address);
+        await approvedCallsPolicy.grantRole(ethers.utils.keccak256(ethers.utils.toUtf8Bytes('POLICY_ADMIN_ROLE')), owner.address);
+        await approvedCallsPolicy.setConsumersStatuses([sampleConsumer.address], [true]);
+        await firewall.setPolicyStatus(approvedCallsPolicy.address, true);
+        await firewall.addGlobalPolicy(
+            sampleConsumer.address,
+            approvedCallsPolicy.address
+        );
     });
 
     it('gas comparison test', async function () {
+        await firewall.removeGlobalPolicy(
+            sampleConsumer.address,
+            approvedCallsPolicy.address
+        );
         await sampleConsumer.deposit({ value: ethers.utils.parseEther('1') });
         await sampleConsumer.withdraw(ethers.utils.parseEther('1'));
     });
 
-    it('Firewall Approved calls policy onlyOwner functions', async function () {
-        const ApprovedCallsPolicy = await ethers.getContractFactory(
-            'ApprovedCallsPolicy'
-        );
-        const approvedCallsPolicy =
-            await ApprovedCallsPolicy.deploy();
+    it('Firewall Approved calls with signature policy only signer functions', async () => {
         await expect(
             approvedCallsPolicy.connect(addr1).approveCalls(
-                [`0x${'00'.repeat(32)}`],
-            )
-        ).to.be.revertedWith('Ownable: caller is not the owner');
-    });
-
-    it('Firewall Approved calls policy unapproved call fails', async function () {
-        const ApprovedCallsPolicy = await ethers.getContractFactory(
-            'ApprovedCallsPolicy'
-        );
-        const approvedCallsPolicy =
-            await ApprovedCallsPolicy.deploy();
-        await firewall.setPolicyStatus(approvedCallsPolicy.address, true);
-        await firewall.addPolicy(
-            sampleConsumer.address,
-            sampleConsumerIface.getSighash('deposit()'),
-            approvedCallsPolicy.address
-        );
-        await expect(
-            sampleConsumer
-                .connect(addr2)
-                .deposit({ value: ethers.utils.parseEther('1') })
-        ).to.be.revertedWith('ApprovedCallsPolicy: call hashes empty');
-    });
-
-    it('Firewall Approved calls policy admin functions', async function () {
-        const ApprovedCallsPolicy = await ethers.getContractFactory(
-            'ApprovedCallsPolicy'
-        );
-        const approvedCallsPolicy =
-            await ApprovedCallsPolicy.deploy();
-        await firewall.setPolicyStatus(approvedCallsPolicy.address, true);
-        await firewall.addPolicy(
-            sampleConsumer.address,
-            sampleConsumerIface.getSighash('setOwner(address)'),
-            approvedCallsPolicy.address
-        );
-        const setOwnerPayload = sampleConsumerIface.encodeFunctionData(
-            'setOwner(address)',
-            [owner.address]
-        );
-        const callHash = ethers.utils.solidityKeccak256(
-            ['address', 'address', 'address', 'bytes', 'uint256'],
-            [
-                sampleConsumer.address,
-                owner.address,
-                owner.address,
-                setOwnerPayload,
-                0,
-            ]
-        );
-        await approvedCallsPolicy.approveCalls([callHash]);
-        await expect(sampleConsumer.connect(owner).setOwner(owner.address)).to
-            .not.be.reverted;
-        await expect(
-            sampleConsumer.connect(owner).setOwner(owner.address)
-        ).to.be.revertedWith('ApprovedCallsPolicy: call hashes empty');
-        const nextCallHash = ethers.utils.solidityKeccak256(
-            ['address', 'address', 'address', 'bytes', 'uint256'],
-            [
-                sampleConsumer.address,
-                owner.address,
-                owner.address,
-                setOwnerPayload,
-                1,
-            ]
-        );
-        await approvedCallsPolicy.approveCalls([nextCallHash]);
-        await expect(
-            sampleConsumer.connect(owner).setOwner(owner.address)
-        ).to.be.revertedWith('ApprovedCallsPolicy: invalid call hash');
-    });
-
-    it('Firewall Approved calls bundle policy onlyOwner functions', async function () {
-        const ApprovedCallsBundlePolicy = await ethers.getContractFactory(
-            'ApprovedCallsBundlePolicy'
-        );
-        const approvedCallsBundlePolicy =
-            await ApprovedCallsBundlePolicy.deploy();
-        await expect(
-            approvedCallsBundlePolicy.connect(addr1).approveCalls(
-                [`0x${'00'.repeat(32)}`],
-            )
-        ).to.be.revertedWith('Ownable: caller is not the owner');
-    });
-
-    it('Firewall Approved calls bundle policy unapproved call fails', async function () {
-        const ApprovedCallsBundlePolicy = await ethers.getContractFactory(
-            'ApprovedCallsBundlePolicy'
-        );
-        const approvedCallsBundlePolicy =
-            await ApprovedCallsBundlePolicy.deploy();
-        await firewall.setPolicyStatus(approvedCallsBundlePolicy.address, true);
-        await firewall.addPolicy(
-            sampleConsumer.address,
-            sampleConsumerIface.getSighash('deposit()'),
-            approvedCallsBundlePolicy.address
-        );
-        await expect(
-            sampleConsumer
-                .connect(addr2)
-                .deposit({ value: ethers.utils.parseEther('1') })
-        ).to.be.revertedWith('ApprovedCallsBundlePolicy: call hashes empty');
-    });
-
-    it('Firewall Approved calls bundle policy multiple approved calls', async function () {
-        const SampleContractUser = await ethers.getContractFactory(
-            'SampleContractUser'
-        );
-        const ApprovedCallsBundlePolicy = await ethers.getContractFactory(
-            'ApprovedCallsBundlePolicy'
-        );
-        const approvedCallsBundlePolicy =
-            await ApprovedCallsBundlePolicy.deploy();
-        const sampleContractUser = await SampleContractUser.deploy();
-
-        await firewall.setPolicyStatus(approvedCallsBundlePolicy.address, true);
-        await firewall.addPolicy(
-            sampleConsumer.address,
-            sampleConsumerIface.getSighash('deposit()'),
-            approvedCallsBundlePolicy.address
-        );
-
-        const depositPayload = sampleConsumerIface.encodeFunctionData('deposit()');
-        const withdrawPayload = sampleConsumerIface.encodeFunctionData('withdraw(uint256)', [ethers.utils.parseEther('1')]);
-        // +2 instead of +1 because we need to call 'approveCalls'
-        const executionBlock = (await ethers.provider.getBlockNumber()) + 2;
-
-        const depositCallHash = ethers.utils.solidityKeccak256(
-            ['address', 'address', 'address', 'bytes', 'uint256', 'uint256'],
-            [
-                sampleConsumer.address,
-                sampleContractUser.address,
-                owner.address,
-                depositPayload,
-                ethers.utils.parseEther('1'),
-                executionBlock,
-            ]
-        );
-        const withdrawCallHash = ethers.utils.solidityKeccak256(
-            ['address', 'address', 'address', 'bytes', 'uint256', 'uint256'],
-            [
-                sampleConsumer.address,
-                sampleContractUser.address,
-                owner.address,
-                withdrawPayload,
-                ethers.utils.parseEther('0'),
-                executionBlock,
-            ]
-        );
-        // We pass the calls in reverse order because the bundle policy pops the last element
-        await approvedCallsBundlePolicy.approveCalls([withdrawCallHash, depositCallHash]);
-
-        await expect(
-            sampleContractUser
-                .connect(owner)
-                .depositAndWithdraw(sampleConsumer.address, { value: ethers.utils.parseEther('1') })
-        ).to.not.be.reverted;
-    });
-
-    it('Firewall Approved calls bundle policy wrong call order fails', async function () {
-        const SampleContractUser = await ethers.getContractFactory(
-            'SampleContractUser'
-        );
-        const ApprovedCallsBundlePolicy = await ethers.getContractFactory(
-            'ApprovedCallsBundlePolicy'
-        );
-        const approvedCallsBundlePolicy =
-            await ApprovedCallsBundlePolicy.deploy();
-        const sampleContractUser = await SampleContractUser.deploy();
-
-        await firewall.setPolicyStatus(approvedCallsBundlePolicy.address, true);
-        await firewall.addPolicy(
-            sampleConsumer.address,
-            sampleConsumerIface.getSighash('deposit()'),
-            approvedCallsBundlePolicy.address
-        );
-
-        const depositPayload = sampleConsumerIface.encodeFunctionData('deposit()');
-        const withdrawPayload = sampleConsumerIface.encodeFunctionData('withdraw(uint256)', [ethers.utils.parseEther('1')]);
-        // +2 instead of +1 because we need to call 'approveCalls'
-        const executionBlock = (await ethers.provider.getBlockNumber()) + 2;
-
-        const depositCallHash = ethers.utils.solidityKeccak256(
-            ['address', 'address', 'address', 'bytes', 'uint256', 'uint256'],
-            [
-                sampleConsumer.address,
-                sampleContractUser.address,
-                owner.address,
-                depositPayload,
-                ethers.utils.parseEther('1'),
-                executionBlock,
-            ]
-        );
-        const withdrawCallHash = ethers.utils.solidityKeccak256(
-            ['address', 'address', 'address', 'bytes', 'uint256', 'uint256'],
-            [
-                sampleConsumer.address,
-                sampleContractUser.address,
-                owner.address,
-                withdrawPayload,
-                ethers.utils.parseEther('0'),
-                executionBlock,
-            ]
-        );
-        await approvedCallsBundlePolicy.approveCalls([depositCallHash, withdrawCallHash]);
-
-        await expect(
-            sampleContractUser
-                .connect(owner)
-                .depositAndWithdraw(sampleConsumer.address, { value: ethers.utils.parseEther('1') })
-        ).to.be.revertedWith('ApprovedCallsBundlePolicy: invalid call hash');
-    });
-
-    it('Firewall Approved calls bundle policy admin functions', async function () {
-        const ApprovedCallsBundlePolicy = await ethers.getContractFactory(
-            'ApprovedCallsBundlePolicy'
-        );
-        const approvedCallsBundlePolicy =
-            await ApprovedCallsBundlePolicy.deploy();
-        await firewall.setPolicyStatus(approvedCallsBundlePolicy.address, true);
-        await firewall.addPolicy(
-            sampleConsumer.address,
-            sampleConsumerIface.getSighash('setOwner(address)'),
-            approvedCallsBundlePolicy.address
-        );
-        const setOwnerPayload = sampleConsumerIface.encodeFunctionData(
-            'setOwner(address)',
-            [owner.address]
-        );
-        // +2 instead of +1 because we need to call 'approveCalls'
-        const executionBlock = (await ethers.provider.getBlockNumber()) + 2;
-        const callHash = ethers.utils.solidityKeccak256(
-            ['address', 'address', 'address', 'bytes', 'uint256', 'uint256'],
-            [
-                sampleConsumer.address,
-                owner.address,
-                owner.address,
-                setOwnerPayload,
-                0,
-                executionBlock,
-            ]
-        );
-        await approvedCallsBundlePolicy.approveCalls([callHash]);
-        await expect(sampleConsumer.connect(owner).setOwner(owner.address)).to
-            .not.be.reverted;
-        await expect(
-            sampleConsumer.connect(owner).setOwner(owner.address)
-        ).to.be.revertedWith('ApprovedCallsBundlePolicy: call hashes empty');
-        const nextCallHash = ethers.utils.solidityKeccak256(
-            ['address', 'address', 'address', 'bytes', 'uint256', 'uint256'],
-            [
-                sampleConsumer.address,
-                owner.address,
-                owner.address,
-                setOwnerPayload,
-                0,
-                executionBlock,
-            ]
-        );
-        await approvedCallsBundlePolicy.approveCalls([nextCallHash]);
-        await expect(
-            sampleConsumer.connect(owner).setOwner(owner.address)
-        ).to.be.revertedWith('ApprovedCallsBundlePolicy: invalid call hash');
-    });
-
-    it('Firewall Approved calls with signature policy only signer functions', async function () {
-        const ApprovedCallsWithSignaturePolicy = await ethers.getContractFactory(
-            'ApprovedCallsWithSignaturePolicy'
-        );
-        const approvedCallsWithSignaturePolicy =
-            await ApprovedCallsWithSignaturePolicy.deploy();
-        await expect(
-            approvedCallsWithSignaturePolicy.connect(addr1).approveCalls(
                 [`0x${'00'.repeat(32)}`],
                 0,
                 addr2.address,
@@ -310,71 +122,75 @@ describe('Approved Calls Policy', function () {
         ).to.be.revertedWith(`AccessControl: account ${addr1.address.toLowerCase()} is missing role 0xe2f4eaae4a9751e85a3e4a7b9587827a877f29914755229b07a7b2da98285f70`);
     });
 
-    it('Firewall Approved calls with signature policy unapproved call fails', async function () {
-        const ApprovedCallsWithSignaturePolicy = await ethers.getContractFactory(
-            'ApprovedCallsWithSignaturePolicy'
-        );
-        const approvedCallsWithSignaturePolicy =
-            await ApprovedCallsWithSignaturePolicy.deploy();
-        await firewall.setPolicyStatus(approvedCallsWithSignaturePolicy.address, true);
-        await firewall.addPolicy(
-            sampleConsumer.address,
-            sampleConsumerIface.getSighash('deposit()'),
-            approvedCallsWithSignaturePolicy.address
-        );
-        await expect(
-            sampleConsumer
-                .connect(addr2)
-                .deposit({ value: ethers.utils.parseEther('1') })
-        ).to.be.revertedWith('ApprovedCallsWithSignaturePolicy: call hashes empty');
+    describe('run', () => {
+        it('Firewall Approved calls with signature policy unapproved call fails', async () => {
+            await firewall.addPolicy(
+                sampleConsumer.address,
+                sampleConsumerIface.getSighash('deposit()'),
+                approvedCallsPolicy.address
+            );
+            const tx = sampleConsumer
+                    .connect(addr2)
+                    .deposit({ value: ethers.utils.parseEther('1') });
+            await expect(tx).to.be.revertedWith('ApprovedCallsPolicy: call hashes empty');
+        });
+
+        it('Firewall Approved calls with signature policy approved calls', async () => {
+            const depositCallHash = createDepositCallHash(
+                sampleConsumer.address,
+                sampleContractUser.address,
+                addr1.address,
+                ethers.utils.parseEther('1'),
+            );
+            const withdrawCallHash = createWithdrawCallHash(
+                sampleConsumer.address,
+                sampleContractUser.address,
+                addr1.address,
+                ethers.utils.parseEther('1'),
+            );
+            const signature = await createSignature(
+                owner,
+                [withdrawCallHash, depositCallHash],
+                ethers.utils.parseEther('1'), // expiration, yuge numba
+                addr1.address,
+                0,
+            );
+            // We pass the calls in reverse order because the bundle policy pops the last element
+            await approvedCallsPolicy.approveCallsViaSignature(
+                [withdrawCallHash, depositCallHash],
+                ethers.utils.parseEther('1'),
+                addr1.address,
+                0,
+                signature
+            );
+    
+            let tx = sampleContractUser
+                    .connect(addr1)
+                    .depositAndWithdraw(sampleConsumer.address, { value: ethers.utils.parseEther('1') });
+            await expect(tx).to.not.be.reverted;
+            await expect(tx).to.not.emit(firewall, 'DryrunPolicyPreSuccess');
+            await expect(tx).to.not.emit(firewall, 'DryrunPolicyPreError');
+            await expect(tx).to.not.emit(firewall, 'DryrunPolicyPostSuccess');
+            await expect(tx).to.not.emit(firewall, 'DryrunPolicyPostError');
+        });
     });
 
-    it('Firewall Approved calls with signature policy approved calls', async function () {
-        const SampleContractUser = await ethers.getContractFactory(
-            'SampleContractUser'
-        );
-        const ApprovedCallsWithSignaturePolicy = await ethers.getContractFactory(
-            'ApprovedCallsWithSignaturePolicy'
-        );
-        const approvedCallsWithSignaturePolicy =
-            await ApprovedCallsWithSignaturePolicy.deploy();
-        await approvedCallsWithSignaturePolicy.grantRole(ethers.utils.keccak256(ethers.utils.toUtf8Bytes('SIGNER_ROLE')), owner.address);
-        const sampleContractUser = await SampleContractUser.deploy();
-
-        await firewall.setPolicyStatus(approvedCallsWithSignaturePolicy.address, true);
-        await firewall.addPolicy(
-            sampleConsumer.address,
-            sampleConsumerIface.getSighash('deposit()'),
-            approvedCallsWithSignaturePolicy.address
-        );
-
+    it('Firewall safeFunctionCall cannot call unapproved target', async function () {
         const depositPayload = sampleConsumerIface.encodeFunctionData('deposit()');
-        const withdrawPayload = sampleConsumerIface.encodeFunctionData('withdraw(uint256)', [ethers.utils.parseEther('1')]);
-
         const depositCallHash = ethers.utils.solidityKeccak256(
             ['address', 'address', 'address', 'bytes', 'uint256'],
             [
                 sampleConsumer.address,
-                sampleContractUser.address,
+                addr1.address,
                 addr1.address,
                 depositPayload,
                 ethers.utils.parseEther('1'),
             ]
         );
-        const withdrawCallHash = ethers.utils.solidityKeccak256(
-            ['address', 'address', 'address', 'bytes', 'uint256'],
-            [
-                sampleConsumer.address,
-                sampleContractUser.address,
-                addr1.address,
-                withdrawPayload,
-                ethers.utils.parseEther('0'),
-            ]
-        );
         const packed = ethers.utils.solidityPack(
             ['bytes32[]', 'uint256', 'address', 'uint256', 'uint256'],
             [
-                [withdrawCallHash, depositCallHash],
+                [depositCallHash],
                 ethers.utils.parseEther('1'), // expiration, yuge numba
                 addr1.address,
                 0,
@@ -386,19 +202,67 @@ describe('Approved Calls Policy', function () {
         );
         const messageHashBytes = ethers.utils.arrayify(messageHash)
         const signature = await owner.signMessage(messageHashBytes);
-        // We pass the calls in reverse order because the bundle policy pops the last element
-        await approvedCallsWithSignaturePolicy.approveCallsViaSignature(
-            [withdrawCallHash, depositCallHash],
-            ethers.utils.parseEther('1'),
-            addr1.address,
-            0,
-            signature
+        const approvePayload = approvedCallsPolicyIface.encodeFunctionData(
+            'approveCallsViaSignature',
+            [
+                [depositCallHash],
+                ethers.utils.parseEther('1'),
+                addr1.address,
+                0,
+                signature
+            ]
         );
 
         await expect(
-            sampleContractUser
+            sampleConsumer
                 .connect(addr1)
-                .depositAndWithdraw(sampleConsumer.address, { value: ethers.utils.parseEther('1') })
+                .safeFunctionCall(approvedCallsPolicy.address, approvePayload, depositPayload, { value: ethers.utils.parseEther('1') })
+        ).to.be.revertedWith("FirewallConsumer: Not approved target");
+    });
+
+    it('Firewall Approved calls with signature + safeFunctionCall', async function () {
+        await sampleConsumer.setApprovedTarget(approvedCallsPolicy.address, true);
+        const depositPayload = sampleConsumerIface.encodeFunctionData('deposit()');
+        const depositCallHash = ethers.utils.solidityKeccak256(
+            ['address', 'address', 'address', 'bytes', 'uint256'],
+            [
+                sampleConsumer.address,
+                addr1.address,
+                addr1.address,
+                depositPayload,
+                ethers.utils.parseEther('1'),
+            ]
+        );
+        const packed = ethers.utils.solidityPack(
+            ['bytes32[]', 'uint256', 'address', 'uint256', 'uint256'],
+            [
+                [depositCallHash],
+                ethers.utils.parseEther('1'), // expiration, yuge numba
+                addr1.address,
+                0,
+                31337, // hardhat chainid
+            ]
+        );
+        const messageHash = ethers.utils.solidityKeccak256(
+            ['bytes'], [packed]
+        );
+        const messageHashBytes = ethers.utils.arrayify(messageHash)
+        const signature = await owner.signMessage(messageHashBytes);
+        const approvePayload = approvedCallsPolicyIface.encodeFunctionData(
+            'approveCallsViaSignature',
+            [
+                [depositCallHash],
+                ethers.utils.parseEther('1'),
+                addr1.address,
+                0,
+                signature
+            ]
+        );
+
+        await expect(
+            sampleConsumer
+                .connect(addr1)
+                .safeFunctionCall(approvedCallsPolicy.address, approvePayload, depositPayload, { value: ethers.utils.parseEther('1') })
         ).to.not.be.reverted;
     });
 

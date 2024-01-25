@@ -19,7 +19,7 @@ contract SampleConsumerInternals is Ownable, FirewallConsumerBase {
         _deposit(msg.value);
     }
 
-    function _deposit(uint amount) internal firewallProtectedCustom(abi.encodePacked(bytes4(0x9213b124))) {
+    function _deposit(uint amount) internal firewallProtectedSig(0x9213b124) {
         deposits[msg.sender] += amount;
     }
 
@@ -33,7 +33,7 @@ contract SampleConsumerInternals is Ownable, FirewallConsumerBase {
         }
     }
 
-    function _withdraw(uint amount) internal firewallProtectedCustom(abi.encodePacked(bytes4(0xac6a2b5d))) {
+    function _withdraw(uint amount) internal firewallProtectedSig(0xac6a2b5d) {
         deposits[msg.sender] -= amount;
         Address.sendValue(payable(msg.sender), amount);
     }

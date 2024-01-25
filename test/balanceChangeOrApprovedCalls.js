@@ -3,9 +3,9 @@ const { ethers } = require('hardhat');
 
 const ETH_ADDRESS = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE';
 
-describe('Balance Change Or Approved Calls Policy', function () {
+describe('Balance Change Or Approved Calls Policy (CPP)', function () {
     let owner, addr1, addr2;
-    let firewall, sampleConsumer, sampleConsumerIface, balanceChangeOrApprovedCallsWithSignaturePolicy, testToken;
+    let firewall, sampleConsumer, sampleConsumerIface, combinedPoliciesPolicy, balanceChangePolicy, approvedCallsPolicy, testToken;
 
     beforeEach(async function () {
         [owner, addr1, addr2] = await ethers.getSigners();
@@ -13,26 +13,51 @@ describe('Balance Change Or Approved Calls Policy', function () {
         const SampleConsumerFactory = await ethers.getContractFactory(
             'SampleConsumer'
         );
-        const BalanceChangeOrApprovedCallsWithSignaturePolicy = await ethers.getContractFactory(
-            'BalanceChangeOrApprovedCallsWithSignaturePolicy'
+        const CombinedPoliciesPolicy = await ethers.getContractFactory(
+            'CombinedPoliciesPolicy'
+        );
+        const BalanceChangePolicy = await ethers.getContractFactory(
+            'BalanceChangePolicy'
+        );
+        const ApprovedCallsPolicy = await ethers.getContractFactory(
+            'ApprovedCallsPolicy'
         );
         const SampleToken = await ethers.getContractFactory('SampleToken');
-        testToken = await SampleToken.deploy();
-        balanceChangeOrApprovedCallsWithSignaturePolicy =
-            await BalanceChangeOrApprovedCallsWithSignaturePolicy.deploy();
         firewall = await FirewallFactory.deploy();
+        testToken = await SampleToken.deploy();
         sampleConsumer = await SampleConsumerFactory.deploy(firewall.address);
         sampleConsumerIface = SampleConsumerFactory.interface;
-        await balanceChangeOrApprovedCallsWithSignaturePolicy.grantRole(ethers.utils.keccak256(ethers.utils.toUtf8Bytes('SIGNER_ROLE')), owner.address);
-        await firewall.setPolicyStatus(balanceChangeOrApprovedCallsWithSignaturePolicy.address, true);
-        await firewall.addGlobalPolicy(sampleConsumer.address, balanceChangeOrApprovedCallsWithSignaturePolicy.address);
+
+        combinedPoliciesPolicy = await CombinedPoliciesPolicy.deploy(firewall.address);
+        balanceChangePolicy = await BalanceChangePolicy.deploy(firewall.address);
+        approvedCallsPolicy = await ApprovedCallsPolicy.deploy(firewall.address);
+
+        await combinedPoliciesPolicy.grantRole(ethers.utils.keccak256(ethers.utils.toUtf8Bytes('POLICY_ADMIN_ROLE')), owner.address);
+        await balanceChangePolicy.grantRole(ethers.utils.keccak256(ethers.utils.toUtf8Bytes('POLICY_ADMIN_ROLE')), owner.address);
+        await approvedCallsPolicy.grantRole(ethers.utils.keccak256(ethers.utils.toUtf8Bytes('POLICY_ADMIN_ROLE')), owner.address);
+
+        await balanceChangePolicy.setConsumersStatuses([sampleConsumer.address], [true]);
+        await balanceChangePolicy.setExecutorStatus(combinedPoliciesPolicy.address, true);
+
+        await approvedCallsPolicy.grantRole(ethers.utils.keccak256(ethers.utils.toUtf8Bytes('SIGNER_ROLE')), owner.address);
+        await approvedCallsPolicy.setExecutorStatus(combinedPoliciesPolicy.address, true);
+        await approvedCallsPolicy.setConsumersStatuses([sampleConsumer.address], [true]);
+
+        await combinedPoliciesPolicy.setConsumersStatuses([sampleConsumer.address], [true]);
+        await combinedPoliciesPolicy.setAllowedCombinations(
+            [balanceChangePolicy.address, approvedCallsPolicy.address],
+            [[true, true], [true, false], [false, true]]
+        );
+
+        await firewall.setPolicyStatus(combinedPoliciesPolicy.address, true);
+        await firewall.addGlobalPolicy(sampleConsumer.address, combinedPoliciesPolicy.address);
         await testToken.transfer(addr1.address, ethers.utils.parseEther('100'));
         await testToken.connect(addr1).approve(sampleConsumer.address, ethers.utils.parseEther('100'));
     });
 
     it('Firewall Balance Change Or Approved calls with signature policy only signer functions', async function () {
         await expect(
-            balanceChangeOrApprovedCallsWithSignaturePolicy.connect(addr1).approveCalls(
+            approvedCallsPolicy.connect(addr1).approveCalls(
                 [`0x${'00'.repeat(32)}`],
                 0,
                 addr2.address,
@@ -42,70 +67,70 @@ describe('Balance Change Or Approved Calls Policy', function () {
 
     it('Firewall Balance Change Or Approved calls with signature policy managing tokens', async function () {
         let consumerTokens;
-        await balanceChangeOrApprovedCallsWithSignaturePolicy.setConsumerMaxBalanceChange(
+        await balanceChangePolicy.setConsumerMaxBalanceChange(
             sampleConsumer.address,
             ETH_ADDRESS,
             ethers.utils.parseEther('1')
         );
-        consumerTokens = await balanceChangeOrApprovedCallsWithSignaturePolicy.getConsumerTokens(sampleConsumer.address);
+        consumerTokens = await balanceChangePolicy.getConsumerTokens(sampleConsumer.address);
         expect(consumerTokens).to.eql([ETH_ADDRESS]);
-        await balanceChangeOrApprovedCallsWithSignaturePolicy.setConsumerMaxBalanceChange(
+        await balanceChangePolicy.setConsumerMaxBalanceChange(
             sampleConsumer.address,
             ETH_ADDRESS,
             ethers.utils.parseEther('2')
         );
-        consumerTokens = await balanceChangeOrApprovedCallsWithSignaturePolicy.getConsumerTokens(sampleConsumer.address);
+        consumerTokens = await balanceChangePolicy.getConsumerTokens(sampleConsumer.address);
         expect(consumerTokens).to.eql([ETH_ADDRESS]);
-        await balanceChangeOrApprovedCallsWithSignaturePolicy.removeToken(
+        await balanceChangePolicy.removeToken(
             sampleConsumer.address,
             ETH_ADDRESS,
         );
-        consumerTokens = await balanceChangeOrApprovedCallsWithSignaturePolicy.getConsumerTokens(sampleConsumer.address);
+        consumerTokens = await balanceChangePolicy.getConsumerTokens(sampleConsumer.address);
         expect(consumerTokens).to.eql([]);
-        await balanceChangeOrApprovedCallsWithSignaturePolicy.setConsumerMaxBalanceChange(
+        await balanceChangePolicy.setConsumerMaxBalanceChange(
             sampleConsumer.address,
             ETH_ADDRESS,
             ethers.utils.parseEther('1')
         );
-        consumerTokens = await balanceChangeOrApprovedCallsWithSignaturePolicy.getConsumerTokens(sampleConsumer.address);
+        consumerTokens = await balanceChangePolicy.getConsumerTokens(sampleConsumer.address);
         expect(consumerTokens).to.eql([ETH_ADDRESS]);
-        await balanceChangeOrApprovedCallsWithSignaturePolicy.setConsumerMaxBalanceChange(
+        await balanceChangePolicy.setConsumerMaxBalanceChange(
             sampleConsumer.address,
             testToken.address,
             ethers.utils.parseEther('2')
         );
-        consumerTokens = await balanceChangeOrApprovedCallsWithSignaturePolicy.getConsumerTokens(sampleConsumer.address);
+        consumerTokens = await balanceChangePolicy.getConsumerTokens(sampleConsumer.address);
         expect(consumerTokens).to.eql([ETH_ADDRESS, testToken.address]);
-        await balanceChangeOrApprovedCallsWithSignaturePolicy.setConsumerMaxBalanceChange(
+        await balanceChangePolicy.setConsumerMaxBalanceChange(
             sampleConsumer.address,
             addr2.address,
             ethers.utils.parseEther('2')
         );
-        consumerTokens = await balanceChangeOrApprovedCallsWithSignaturePolicy.getConsumerTokens(sampleConsumer.address);
+        consumerTokens = await balanceChangePolicy.getConsumerTokens(sampleConsumer.address);
         expect(consumerTokens).to.eql([ETH_ADDRESS, testToken.address, addr2.address]);
-        await balanceChangeOrApprovedCallsWithSignaturePolicy.removeToken(
+        await balanceChangePolicy.removeToken(
             sampleConsumer.address,
             testToken.address,
         );
-        consumerTokens = await balanceChangeOrApprovedCallsWithSignaturePolicy.getConsumerTokens(sampleConsumer.address);
+        consumerTokens = await balanceChangePolicy.getConsumerTokens(sampleConsumer.address);
         expect(consumerTokens).to.eql([ETH_ADDRESS, addr2.address]);
-        await balanceChangeOrApprovedCallsWithSignaturePolicy.setConsumerMaxBalanceChange(
+        await balanceChangePolicy.setConsumerMaxBalanceChange(
             sampleConsumer.address,
             testToken.address,
             ethers.utils.parseEther('1')
         );
-        consumerTokens = await balanceChangeOrApprovedCallsWithSignaturePolicy.getConsumerTokens(sampleConsumer.address);
+        consumerTokens = await balanceChangePolicy.getConsumerTokens(sampleConsumer.address);
         expect(consumerTokens).to.eql([ETH_ADDRESS, addr2.address, testToken.address]);
-        await balanceChangeOrApprovedCallsWithSignaturePolicy.removeToken(
+        await balanceChangePolicy.removeToken(
             sampleConsumer.address,
             testToken.address,
         );
-        consumerTokens = await balanceChangeOrApprovedCallsWithSignaturePolicy.getConsumerTokens(sampleConsumer.address);
+        consumerTokens = await balanceChangePolicy.getConsumerTokens(sampleConsumer.address);
         expect(consumerTokens).to.eql([ETH_ADDRESS, addr2.address]);
     });
 
     it('Firewall Balance Change Or Approved calls with signature policy unapproved call above limit fails (eth)', async function () {
-        await balanceChangeOrApprovedCallsWithSignaturePolicy.setConsumerMaxBalanceChange(
+        await balanceChangePolicy.setConsumerMaxBalanceChange(
             sampleConsumer.address,
             ETH_ADDRESS,
             ethers.utils.parseEther('1')
@@ -114,11 +139,11 @@ describe('Balance Change Or Approved Calls Policy', function () {
             sampleConsumer
                 .connect(addr2)
                 .deposit({ value: ethers.utils.parseEther('1.01') })
-        ).to.be.revertedWith('BalanceChangePolicy: Balance change exceeds limit');
+        ).to.be.revertedWith('CombinedPoliciesPolicy: Disallowed combination');
     });
 
     it('Firewall Balance Change Or Approved calls with signature policy unapproved call above limit fails (token)', async function () {
-        await balanceChangeOrApprovedCallsWithSignaturePolicy.setConsumerMaxBalanceChange(
+        await balanceChangePolicy.setConsumerMaxBalanceChange(
             sampleConsumer.address,
             testToken.address,
             ethers.utils.parseEther('1')
@@ -127,16 +152,16 @@ describe('Balance Change Or Approved Calls Policy', function () {
             sampleConsumer
                 .connect(addr1)
                 .depositToken(testToken.address, ethers.utils.parseEther('1.01'))
-        ).to.be.revertedWith('BalanceChangePolicy: Balance change exceeds limit');
+        ).to.be.revertedWith('CombinedPoliciesPolicy: Disallowed combination');
     });
 
     it('Firewall Balance Change Or Approved calls with signature policy unapproved call above limit fails (token+eth)', async function () {
-        await balanceChangeOrApprovedCallsWithSignaturePolicy.setConsumerMaxBalanceChange(
+        await balanceChangePolicy.setConsumerMaxBalanceChange(
             sampleConsumer.address,
             testToken.address,
             ethers.utils.parseEther('1')
         );
-        await balanceChangeOrApprovedCallsWithSignaturePolicy.setConsumerMaxBalanceChange(
+        await balanceChangePolicy.setConsumerMaxBalanceChange(
             sampleConsumer.address,
             ETH_ADDRESS,
             ethers.utils.parseEther('1')
@@ -145,16 +170,16 @@ describe('Balance Change Or Approved Calls Policy', function () {
             sampleConsumer
                 .connect(addr2)
                 .deposit({ value: ethers.utils.parseEther('1.01') })
-        ).to.be.revertedWith('BalanceChangePolicy: Balance change exceeds limit');
+        ).to.be.revertedWith('CombinedPoliciesPolicy: Disallowed combination');
         await expect(
             sampleConsumer
                 .connect(addr1)
                 .depositToken(testToken.address, ethers.utils.parseEther('1.01'))
-        ).to.be.revertedWith('BalanceChangePolicy: Balance change exceeds limit');
+        ).to.be.revertedWith('CombinedPoliciesPolicy: Disallowed combination');
     });
 
     it('Firewall Balance Change Or Approved calls with signature policy unapproved call below limit passes (eth)', async function () {
-        await balanceChangeOrApprovedCallsWithSignaturePolicy.setConsumerMaxBalanceChange(
+        await balanceChangePolicy.setConsumerMaxBalanceChange(
             sampleConsumer.address,
             ETH_ADDRESS,
             ethers.utils.parseEther('1')
@@ -167,7 +192,7 @@ describe('Balance Change Or Approved Calls Policy', function () {
     });
 
     it('Firewall Balance Change Or Approved calls with signature policy unapproved call below limit passes (token)', async function () {
-        await balanceChangeOrApprovedCallsWithSignaturePolicy.setConsumerMaxBalanceChange(
+        await balanceChangePolicy.setConsumerMaxBalanceChange(
             sampleConsumer.address,
             testToken.address,
             ethers.utils.parseEther('1')
@@ -180,12 +205,12 @@ describe('Balance Change Or Approved Calls Policy', function () {
     });
 
     it('Firewall Balance Change Or Approved calls with signature policy unapproved call below limit passes (eth+token)', async function () {
-        await balanceChangeOrApprovedCallsWithSignaturePolicy.setConsumerMaxBalanceChange(
+        await balanceChangePolicy.setConsumerMaxBalanceChange(
             sampleConsumer.address,
             ETH_ADDRESS,
             ethers.utils.parseEther('1')
         );
-        await balanceChangeOrApprovedCallsWithSignaturePolicy.setConsumerMaxBalanceChange(
+        await balanceChangePolicy.setConsumerMaxBalanceChange(
             sampleConsumer.address,
             testToken.address,
             ethers.utils.parseEther('1')
@@ -203,7 +228,7 @@ describe('Balance Change Or Approved Calls Policy', function () {
     });
 
     it('Firewall Approved calls with signature policy approved calls', async function () {
-        await balanceChangeOrApprovedCallsWithSignaturePolicy.setConsumerMaxBalanceChange(
+        await balanceChangePolicy.setConsumerMaxBalanceChange(
             sampleConsumer.address,
             ETH_ADDRESS,
             ethers.utils.parseEther('0.99')
@@ -252,7 +277,7 @@ describe('Balance Change Or Approved Calls Policy', function () {
         const messageHashBytes = ethers.utils.arrayify(messageHash)
         const signature = await owner.signMessage(messageHashBytes);
         // We pass the calls in reverse order because the bundle policy pops the last element
-        await balanceChangeOrApprovedCallsWithSignaturePolicy.approveCallsViaSignature(
+        await approvedCallsPolicy.approveCallsViaSignature(
             [withdrawCallHash, depositCallHash],
             ethers.utils.parseEther('1'),
             addr1.address,

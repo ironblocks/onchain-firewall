@@ -3,7 +3,7 @@
 // Copyright (c) Ironblocks 2023
 pragma solidity 0.8.19;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/access/Ownable2Step.sol";
 import "./interfaces/IFirewall.sol";
 import "./interfaces/IFirewallConsumer.sol";
 import "./interfaces/IFirewallPolicy.sol";
@@ -16,24 +16,46 @@ import "./interfaces/IFirewallPrivateInvariantsPolicy.sol";
  *
  * Each policy is a contract that must implement the IFirewallPolicy interface. The policy contract is responsible for
  * making the decision on whether or not to allow a call to be executed. The policy contract gets access to the consumers
- * full context, including the sender, data, and value of the call as well as the ability to read the before and after
- * of the function execution.
+ * full context, including the sender, data, and value of the call as well as the ability to read state before and after
+ * function execution.
  *
  * Each consumer is a contract whos policys are managed by a single admin. The admin is responsible for adding and removing
  * policies.
  */
-contract Firewall is IFirewall, Ownable {
+contract Firewall is IFirewall, Ownable2Step {
+
+    event PolicyStatusUpdate(address policy, bool status);
+    event GlobalPolicyAdded(address indexed consumer, address policy);
+    event GlobalPolicyRemoved(address indexed consumer, address policy);
+    event PolicyAdded(address indexed consumer, bytes4 methodSig, address policy);
+    event PolicyRemoved(address indexed consumer, bytes4 methodSig, address policy);
+    event InvariantPolicySet(address indexed consumer, bytes4 methodSig, address policy);
+
+    event DryrunPolicyPreSuccess(address indexed consumer, bytes4 methodSig, address policy);
+    event DryrunPolicyPostSuccess(address indexed consumer, bytes4 methodSig, address policy);
+    event DryrunPolicyPreError(address indexed consumer, bytes4 methodSig, address policy, bytes error);
+    event DryrunPolicyPostError(address indexed consumer, bytes4 methodSig, address policy, bytes error);
+
+    event DryrunInvariantPolicyPreSuccess(address indexed consumer, bytes4 methodSig, address policy);
+    event DryrunInvariantPolicyPostSuccess(address indexed consumer, bytes4 methodSig, address policy);
+    event DryrunInvariantPolicyPreError(address indexed consumer, bytes4 methodSig, address policy, bytes error);
+    event DryrunInvariantPolicyPostError(address indexed consumer, bytes4 methodSig, address policy, bytes error);
 
     modifier onlyConsumerAdmin(address consumer) {
         require(msg.sender == IFirewallConsumer(consumer).firewallAdmin(), "Firewall: not consumer admin");
         _;
     }
 
+    // Mapping of policies approved by firewall owner
     mapping (address => bool) public approvedPolicies;
+    // Mapping of consumer + sighash to array of policy addresses
     mapping (address => mapping (bytes4 => address[])) public subscribedPolicies;
+    // Mapping of consumer to array of policy addresses applied to all consumer methods
     mapping (address => address[]) public subscribedGlobalPolicies;
-
+    // Mapping of consumer + sighash to a single invariant policy
     mapping (address => mapping (bytes4 => address)) public subscribedPrivateInvariantsPolicy;
+    // Mapping of consumer to boolean indicating whether dry-run mode is enabled or not
+    mapping (address => bool) public dryrunEnabled;
 
     /**
      * @dev Runs the preExecution hook of all subscribed policies.
@@ -42,11 +64,28 @@ contract Firewall is IFirewall, Ownable {
         bytes4 selector = bytes4(data);
         address[] memory policies = subscribedPolicies[msg.sender][selector];
         address[] memory globalPolicies = subscribedGlobalPolicies[msg.sender];
-        for (uint i = 0; i < policies.length; i++) {
-            IFirewallPolicy(policies[i]).preExecution(msg.sender, sender, data, value);
-        }
-        for (uint i = 0; i < globalPolicies.length; i++) {
-            IFirewallPolicy(globalPolicies[i]).preExecution(msg.sender, sender, data, value);
+        if (dryrunEnabled[msg.sender]) {
+            for (uint i = 0; i < policies.length; i++) {
+                try IFirewallPolicy(policies[i]).preExecution(msg.sender, sender, data, value) {
+                    emit DryrunPolicyPreSuccess(msg.sender, selector, policies[i]);
+                } catch(bytes memory err) {
+                    emit DryrunPolicyPreError(msg.sender, selector, policies[i], err);
+                }
+            }
+            for (uint i = 0; i < globalPolicies.length; i++) {
+                try IFirewallPolicy(globalPolicies[i]).preExecution(msg.sender, sender, data, value) {
+                    emit DryrunPolicyPreSuccess(msg.sender, selector, globalPolicies[i]);
+                } catch(bytes memory err) {
+                    emit DryrunPolicyPreError(msg.sender, selector, globalPolicies[i], err);
+                }
+            }
+        } else {
+            for (uint i = 0; i < policies.length; i++) {
+                IFirewallPolicy(policies[i]).preExecution(msg.sender, sender, data, value);
+            }
+            for (uint i = 0; i < globalPolicies.length; i++) {
+                IFirewallPolicy(globalPolicies[i]).preExecution(msg.sender, sender, data, value);
+            }
         }
     }
 
@@ -57,17 +96,34 @@ contract Firewall is IFirewall, Ownable {
         bytes4 selector = bytes4(data);
         address[] memory policies = subscribedPolicies[msg.sender][selector];
         address[] memory globalPolicies = subscribedGlobalPolicies[msg.sender];
-        for (uint i = 0; i < policies.length; i++) {
-            IFirewallPolicy(policies[i]).postExecution(msg.sender, sender, data, value);
-        }
-        for (uint i = 0; i < globalPolicies.length; i++) {
-            IFirewallPolicy(globalPolicies[i]).postExecution(msg.sender, sender, data, value);
+        if (dryrunEnabled[msg.sender]) {
+            for (uint i = 0; i < policies.length; i++) {
+                try IFirewallPolicy(policies[i]).postExecution(msg.sender, sender, data, value) {
+                    emit DryrunPolicyPostSuccess(msg.sender, selector, policies[i]);
+                } catch(bytes memory err) {
+                    emit DryrunPolicyPostError(msg.sender, selector, policies[i], err);
+                }
+            }
+            for (uint i = 0; i < globalPolicies.length; i++) {
+                try IFirewallPolicy(globalPolicies[i]).postExecution(msg.sender, sender, data, value) {
+                    emit DryrunPolicyPostSuccess(msg.sender, selector, globalPolicies[i]);
+                } catch(bytes memory err) {
+                    emit DryrunPolicyPostError(msg.sender, selector, globalPolicies[i], err);
+                }
+            }
+        } else {
+            for (uint i = 0; i < policies.length; i++) {
+                IFirewallPolicy(policies[i]).postExecution(msg.sender, sender, data, value);
+            }
+            for (uint i = 0; i < globalPolicies.length; i++) {
+                IFirewallPolicy(globalPolicies[i]).postExecution(msg.sender, sender, data, value);
+            }
         }
     }
 
 
     /**
-     * @dev Runs the preExecution hook of all subscribed policies along with private variables policy
+     * @dev Runs the preExecution hook of private variables policy
      */
     function preExecutionPrivateInvariants(
         address sender,
@@ -76,13 +132,23 @@ contract Firewall is IFirewall, Ownable {
     ) external override returns (bytes32[] memory storageSlots) {
         bytes4 selector = bytes4(data);
         address privateInvariantsPolicy = subscribedPrivateInvariantsPolicy[msg.sender][selector];
-        if (privateInvariantsPolicy != address(0)) {
+        if (privateInvariantsPolicy == address(0)) {
+            return storageSlots;
+        }
+        if (dryrunEnabled[msg.sender]) {
+            try IFirewallPrivateInvariantsPolicy(privateInvariantsPolicy).preExecution(msg.sender, sender, data, value) returns (bytes32[] memory sSlots) {
+                storageSlots = sSlots;
+                emit DryrunInvariantPolicyPreSuccess(msg.sender, selector, privateInvariantsPolicy);
+            } catch(bytes memory err) {
+                emit DryrunInvariantPolicyPreError(msg.sender, selector, privateInvariantsPolicy, err);
+            }
+        } else {
             storageSlots = IFirewallPrivateInvariantsPolicy(privateInvariantsPolicy).preExecution(msg.sender, sender, data, value);
         }
     }
 
     /**
-     * @dev Runs the postExecution hook of all subscribed policies along with private variables policy
+     * @dev Runs the postExecution hook of private variables policy
      */
     function postExecutionPrivateInvariants(
         address sender,
@@ -93,7 +159,16 @@ contract Firewall is IFirewall, Ownable {
     ) external override {
         bytes4 selector = bytes4(data);
         address privateInvariantsPolicy = subscribedPrivateInvariantsPolicy[msg.sender][selector];
-        if (privateInvariantsPolicy != address(0)) {
+        if (privateInvariantsPolicy == address(0)) {
+            return;
+        }
+        if (dryrunEnabled[msg.sender]) {
+            try IFirewallPrivateInvariantsPolicy(privateInvariantsPolicy).postExecution(msg.sender, sender, data, value, preValues, postValues) {
+                emit DryrunInvariantPolicyPostSuccess(msg.sender, selector, privateInvariantsPolicy);
+            } catch(bytes memory err) {
+                emit DryrunInvariantPolicyPostError(msg.sender, selector, privateInvariantsPolicy, err);
+            }
+        } else {
             IFirewallPrivateInvariantsPolicy(privateInvariantsPolicy).postExecution(msg.sender, sender, data, value, preValues, postValues);
         }
     }
@@ -104,6 +179,14 @@ contract Firewall is IFirewall, Ownable {
      */
     function setPolicyStatus(address policy, bool status) external onlyOwner {
         approvedPolicies[policy] = status;
+        emit PolicyStatusUpdate(policy, status);
+    }
+
+    /**
+     * @dev Admin only function allowing the consumers admin enable/disable dry run mode.
+     */
+    function setConsumerDryrunStatus(address consumer, bool status) external onlyConsumerAdmin(consumer) {
+        dryrunEnabled[consumer] = status;
     }
 
     /**
@@ -181,6 +264,7 @@ contract Firewall is IFirewall, Ownable {
         for (uint i = 0; i < policies.length; i++) {
             require(approvedPolicies[policies[i]], "Firewall: policy not approved");
             subscribedPrivateInvariantsPolicy[consumer][methodSigs[i]] = policies[i];
+            emit InvariantPolicySet(consumer, methodSigs[i], policies[i]);
         }
     }
 
@@ -205,6 +289,7 @@ contract Firewall is IFirewall, Ownable {
             require(policy != policies[i], "Firewall: policy already exists");
         }
         subscribedPolicies[consumer][methodSig].push(policy);
+        emit PolicyAdded(consumer, methodSig, policy);
     }
 
     function _removePolicy(address consumer, bytes4 methodSig, address policy) internal {
@@ -213,6 +298,7 @@ contract Firewall is IFirewall, Ownable {
             if (policy == policies[i]) {
                 policies[i] = policies[policies.length - 1];
                 policies.pop();
+                emit PolicyRemoved(consumer, methodSig, policy);
                 return;
             }
         }
@@ -225,6 +311,7 @@ contract Firewall is IFirewall, Ownable {
             require(policy != policies[i], "Firewall: policy already exists");
         }
         subscribedGlobalPolicies[consumer].push(policy);
+        emit GlobalPolicyAdded(consumer, policy);
     }
 
     function _removeGlobalPolicy(address consumer, address policy) internal {
@@ -233,6 +320,7 @@ contract Firewall is IFirewall, Ownable {
             if (policy == globalPolicies[i]) {
                 globalPolicies[i] = globalPolicies[globalPolicies.length - 1];
                 globalPolicies.pop();
+                emit GlobalPolicyRemoved(consumer, policy);
                 return;
             }
         }

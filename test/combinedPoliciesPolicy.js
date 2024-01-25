@@ -4,7 +4,7 @@ const { approveVectors } = require('./utils/utils');
 
 const ETH_ADDRESS = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE';
 
-describe('Combinied Policies Policy', function () {
+describe('Combined Policies Policy', function () {
     let owner, addr1, addr2;
     let firewall, sampleConsumer, sampleConsumerInternals, sampleConsumerInternalsIface, sampleConsumerIface,
         combinedPoliciesPolicy, balanceChangePolicy, allowlistPolicy, forbiddenMethodsPolicy, approvedVectorsPolicy;
@@ -38,16 +38,28 @@ describe('Combinied Policies Policy', function () {
         sampleConsumerInternals = await SampleConsumerInternalsFactory.deploy(firewall.address);
         sampleConsumerIface = SampleConsumerFactory.interface;
         sampleConsumerInternalsIface = SampleConsumerInternalsFactory.interface;
-        combinedPoliciesPolicy = await CombinedPoliciesPolicy.deploy();
-        balanceChangePolicy = await BalanceChangePolicy.deploy();
+        combinedPoliciesPolicy = await CombinedPoliciesPolicy.deploy(firewall.address);
+        balanceChangePolicy = await BalanceChangePolicy.deploy(firewall.address);
         allowlistPolicy = await AllowlistPolicy.deploy();
         forbiddenMethodsPolicy = await ForbiddenMethodsPolicy.deploy();
-        approvedVectorsPolicy = await ApprovedVectorsPolicy.deploy();
+        approvedVectorsPolicy = await ApprovedVectorsPolicy.deploy(firewall.address);
+
+        await combinedPoliciesPolicy.grantRole(ethers.utils.keccak256(ethers.utils.toUtf8Bytes('POLICY_ADMIN_ROLE')), owner.address);
+        await approvedVectorsPolicy.grantRole(ethers.utils.keccak256(ethers.utils.toUtf8Bytes('POLICY_ADMIN_ROLE')), owner.address);
+        await forbiddenMethodsPolicy.grantRole(ethers.utils.keccak256(ethers.utils.toUtf8Bytes('POLICY_ADMIN_ROLE')), owner.address);
+        await balanceChangePolicy.grantRole(ethers.utils.keccak256(ethers.utils.toUtf8Bytes('POLICY_ADMIN_ROLE')), owner.address);
+        await allowlistPolicy.grantRole(ethers.utils.keccak256(ethers.utils.toUtf8Bytes('POLICY_ADMIN_ROLE')), owner.address);
+
+        await balanceChangePolicy.setExecutorStatus(combinedPoliciesPolicy.address, true);
+        await approvedVectorsPolicy.setExecutorStatus(combinedPoliciesPolicy.address, true);
+
+        await combinedPoliciesPolicy.setConsumersStatuses([sampleConsumer.address, sampleConsumerInternals.address], [true, true]);
+        await approvedVectorsPolicy.setConsumersStatuses([sampleConsumer.address, sampleConsumerInternals.address], [true, true]);
+        await balanceChangePolicy.setConsumersStatuses([sampleConsumer.address, sampleConsumerInternals.address], [true, true]);
+
         await firewall.setPolicyStatus(combinedPoliciesPolicy.address, true);
         await firewall.addGlobalPolicy(sampleConsumer.address, combinedPoliciesPolicy.address);
         await firewall.addGlobalPolicy(sampleConsumerInternals.address, combinedPoliciesPolicy.address);
-        await combinedPoliciesPolicy.setFirewall(firewall.address);
-        await combinedPoliciesPolicy.setConsumersStatuses([sampleConsumer.address, sampleConsumerInternals.address], [true, true]);
     });
 
     it('Combined Policies balance change or allowlist with internals', async function () {

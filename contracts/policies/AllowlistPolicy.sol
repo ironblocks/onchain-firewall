@@ -3,10 +3,13 @@
 // Copyright (c) Ironblocks 2023
 pragma solidity 0.8.19;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "../interfaces/IFirewallPolicy.sol";
+import "./FirewallPolicyBase.sol";
 
-contract AllowlistPolicy is IFirewallPolicy, Ownable {
+/**
+ * @dev This policy only allows addresses on an allowlist to call the protected method
+ *
+ */
+contract AllowlistPolicy is FirewallPolicyBase {
 
     mapping (address => mapping (address => bool)) public consumerAllowlist;
 
@@ -18,7 +21,7 @@ contract AllowlistPolicy is IFirewallPolicy, Ownable {
         // Do nothing
     }
 
-    function setConsumerAllowlist(address consumer, address account, bool status) external onlyOwner {
+    function setConsumerAllowlist(address consumer, address account, bool status) external onlyRole(POLICY_ADMIN_ROLE) {
         consumerAllowlist[consumer][account] = status;
     }
 }

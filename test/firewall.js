@@ -33,6 +33,9 @@ describe('Firewall', function () {
             sampleConsumer.connect(owner).setFirewallAdmin(addr2.address)
         ).to.not.be.reverted;
         await expect(
+            sampleConsumer.connect(addr2).acceptFirewallAdmin()
+        ).to.not.be.reverted;
+        await expect(
             firewall.connect(addr1).setPolicyStatus(ZERO_ADDRESS, true)
         ).to.be.revertedWith('Ownable: caller is not the owner');
         await firewall.connect(owner).setPolicyStatus(ZERO_ADDRESS, true);
@@ -68,8 +71,8 @@ describe('Firewall', function () {
         );
         const allowlistPolicy = await AllowlistPolicy.deploy();
         const approvedCallsPolicy =
-            await ApprovedCallsPolicy.deploy();
-        const balanceChangePolicy = await BalanceChangePolicy.deploy();
+            await ApprovedCallsPolicy.deploy(firewall.address);
+        const balanceChangePolicy = await BalanceChangePolicy.deploy(firewall.address);
 
         await firewall
             .connect(owner)

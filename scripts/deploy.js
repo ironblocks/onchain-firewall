@@ -5,25 +5,25 @@ async function main() {
 
     const Firewall = await hre.ethers.getContractFactory("Firewall", deployer);
     const SampleConsumer = await hre.ethers.getContractFactory("SampleConsumer", deployer);
-    const ApprovedCallsWithSignaturePolicy = await hre.ethers.getContractFactory("ApprovedCallsWithSignaturePolicy", deployer);
+    const ApprovedCallsPolicy = await hre.ethers.getContractFactory("ApprovedCallsPolicy", deployer);
 
     const firewall = await Firewall.deploy();
     await firewall.deployed();
-    const approvedCallsWithSignaturePolicy = await ApprovedCallsWithSignaturePolicy.deploy();
-    await approvedCallsWithSignaturePolicy.deployed();
+    const approvedCallsPolicy = await ApprovedCallsPolicy.deploy();
+    await approvedCallsPolicy.deployed();
     const sampleConsumer = await SampleConsumer.deploy(firewall.address);
     await sampleConsumer.deployed();
 
-    await approvedCallsWithSignaturePolicy.grantRole(ethers.utils.keccak256(ethers.utils.toUtf8Bytes('SIGNER_ROLE')), deployer.address);
+    await approvedCallsPolicy.grantRole(ethers.utils.keccak256(ethers.utils.toUtf8Bytes('SIGNER_ROLE')), deployer.address);
 
     console.log("Firewall deployed to:", firewall.address);
-    console.log("ApprovedCallsWithSignaturePolicy deployed to:", approvedCallsWithSignaturePolicy.address);
+    console.log("ApprovedCallsPolicy deployed to:", approvedCallsPolicy.address);
     console.log("SampleConsumer deployed to:", sampleConsumer.address);
 
-    await firewall.setPolicyStatus(approvedCallsWithSignaturePolicy.address, true);
+    await firewall.setPolicyStatus(approvedCallsPolicy.address, true);
     await firewall.addGlobalPolicy(
         sampleConsumer.address,
-        approvedCallsWithSignaturePolicy.address
+        approvedCallsPolicy.address
     );
     console.log("Done");
 }

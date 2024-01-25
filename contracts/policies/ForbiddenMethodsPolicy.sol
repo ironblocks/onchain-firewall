@@ -4,9 +4,20 @@
 pragma solidity 0.8.19;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "../interfaces/IFirewallPolicy.sol";
+import "./FirewallPolicyBase.sol";
 
-contract ForbiddenMethodsPolicy is IFirewallPolicy, Ownable {
+/**
+ * @dev This policy reverts if a given method is called.
+ *
+ * While the obvious use case of this policy is to disable methods, there's much more to it.
+ * Note that this policy will revert any time it's called again once a forbidden method has been
+ * called in a transaction. It may seem counterintuitive to write to storage during the `preExecution`
+ * if it causes the `postExecution` to revert. However this makes sense once you consider that this is
+ * meant to be used in conjunction with the `CombinedPoliciesPolicy`, allowing the consumer to create a policy
+ * which will only require certain policies to pass once you hit a defined "forbidden" method.
+ *
+ */
+contract ForbiddenMethodsPolicy is FirewallPolicyBase {
 
     mapping (address => mapping (bytes4 => bool)) public consumerMethodStatus;
     mapping (bytes32 => bool) public hasEnteredForbiddenMethod;
@@ -23,7 +34,7 @@ contract ForbiddenMethodsPolicy is IFirewallPolicy, Ownable {
         require(!hasEnteredForbiddenMethod[currentContext], "Forbidden method");
     }
 
-    function setConsumerForbiddenMethod(address consumer, bytes4 methodSig, bool status) external onlyOwner {
+    function setConsumerForbiddenMethod(address consumer, bytes4 methodSig, bool status) external onlyRole(POLICY_ADMIN_ROLE) {
         consumerMethodStatus[consumer][methodSig] = status;
     }
 

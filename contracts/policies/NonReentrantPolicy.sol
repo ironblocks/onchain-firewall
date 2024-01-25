@@ -3,18 +3,30 @@
 // Copyright (c) Ironblocks 2023
 pragma solidity 0.8.19;
 
-import "../interfaces/IFirewallPolicy.sol";
+import "./FirewallPolicyBase.sol";
 
-contract NonReentrantPolicy is IFirewallPolicy {
+/**
+ * @dev This policy is simply the equivalent of the standard `nonReentrant` modifier.
+ *
+ * This is much less gas efficient than the `nonReentrant` modifier, but allows consumers to make
+ * a non upgradeable contracts method `nonReentrant` post deployment.
+ *
+ */
+contract NonReentrantPolicy is FirewallPolicyBase {
 
     mapping (address => bool) public hasEnteredConsumer;
 
-    function preExecution(address consumer, address, bytes calldata, uint) external override {
+    constructor(address _firewallAddress) FirewallPolicyBase() {
+        authorizedExecutors[_firewallAddress] = true;
+    }
+
+    function preExecution(address consumer, address, bytes calldata, uint) external isAuthorized(consumer) {
         require(!hasEnteredConsumer[consumer], "NO REENTRANCY");
         hasEnteredConsumer[consumer] = true;
     }
 
-    function postExecution(address consumer, address, bytes calldata, uint) external override {
+    function postExecution(address consumer, address, bytes calldata, uint) external isAuthorized(consumer) {
         hasEnteredConsumer[consumer] = false;
     }
+
 }

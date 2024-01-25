@@ -3,13 +3,17 @@
 // Copyright (c) Ironblocks 2023
 pragma solidity 0.8.19;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "../interfaces/IFirewallPolicy.sol";
+import "./FirewallPolicyBase.sol";
 
-contract OnlyEOAPolicy is IFirewallPolicy, Ownable {
+/**
+ * @dev This policy only allows EOAs to interact with the consumer.
+ *
+ * Note that we have an `allowedContracts` mapping, in case another approved contract needs
+ * to be able to call this method.
+ *
+ */
+contract OnlyEOAPolicy is FirewallPolicyBase {
 
-    // In case a protocol has e.g two separate contracts both allowing only EOAs but
-    // these contracts can also call each other.
     mapping (address => bool) public allowedContracts;
 
     function preExecution(address, address sender, bytes calldata, uint) external view override {
@@ -18,7 +22,7 @@ contract OnlyEOAPolicy is IFirewallPolicy, Ownable {
 
     function postExecution(address, address, bytes calldata, uint) external override {}
 
-    function setAllowedContracts(address contractAddress, bool status) external onlyOwner {
+    function setAllowedContracts(address contractAddress, bool status) external onlyRole(POLICY_ADMIN_ROLE) {
         allowedContracts[contractAddress] = status;
     }
 

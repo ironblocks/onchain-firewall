@@ -3,8 +3,7 @@
 // Copyright (c) Ironblocks 2023
 pragma solidity 0.8.19;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "../interfaces/IFirewallPolicy.sol";
+import "./FirewallPolicyBase.sol";
 
 /**
  * @dev This contract is a policy which requires a third party to approve any admin calls.
@@ -15,15 +14,20 @@ import "../interfaces/IFirewallPolicy.sol";
  * authentication verifying that the owner of the contract is the one making the call.
  *
  */
-contract AdminCallPolicy is IFirewallPolicy, Ownable {
+contract AdminCallPolicy is FirewallPolicyBase {
+    bytes32 public constant APPROVER_ROLE = keccak256("APPROVER_ROLE");
 
     // The default amount of time a call hash is valid for after it is approved.
     uint public expirationTime = 1 days;
     // The timestamp that a call hash was approved at (if approved at all).
     mapping (bytes32 => uint) public adminCallHashApprovalTimestamp;
 
-    function preExecution(address consumer, address sender, bytes calldata data, uint value) external override {
-        bytes32 callHash = getCallHash(consumer, sender, tx.origin, data, value);
+    constructor(address _firewallAddress) FirewallPolicyBase() {
+        authorizedExecutors[_firewallAddress] = true;
+    }
+
+    function preExecution(address consumer, address sender, bytes calldata data, uint value) external isAuthorized(consumer) {
+        bytes32 callHash = _getCallHash(consumer, sender, tx.origin, data, value);
         require(adminCallHashApprovalTimestamp[callHash] > 0, "AdminCallPolicy: Call not approved");
         require(adminCallHashApprovalTimestamp[callHash] + expirationTime > block.timestamp, "AdminCallPolicy: Call expired");
         adminCallHashApprovalTimestamp[callHash] = 0;
@@ -32,15 +36,15 @@ contract AdminCallPolicy is IFirewallPolicy, Ownable {
     function postExecution(address, address, bytes calldata, uint) external override {
     }
 
-    function setExpirationTime(uint _expirationTime) external onlyOwner {
+    function setExpirationTime(uint _expirationTime) external onlyRole(APPROVER_ROLE) {
         expirationTime = _expirationTime;
     }
 
-    function approveCall(bytes32 _callHash) external onlyOwner {
+    function approveCall(bytes32 _callHash) external onlyRole(APPROVER_ROLE) {
         adminCallHashApprovalTimestamp[_callHash] = block.timestamp;
     }
 
-    function getCallHash(
+    function _getCallHash(
         address consumer,
         address sender,
         address origin,
@@ -49,4 +53,5 @@ contract AdminCallPolicy is IFirewallPolicy, Ownable {
     ) internal pure returns (bytes32) {
         return keccak256(abi.encodePacked(consumer, sender, origin, data, value));
     }
+
 }

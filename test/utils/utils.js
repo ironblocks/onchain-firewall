@@ -1,4 +1,5 @@
 const ethers = require('ethers');
+const { solidityKeccak256 } = ethers.utils;
 
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
 
@@ -108,15 +109,28 @@ const execSafeTx = async (safe, tx, signers) => {
     )
 };
 
-async function approveVectors(vectors, approvedVectorsPolicy) {
-    for (const vector of vectors) {
-        for (let i = 0; i < vector.length; i++) {
-          const currentVector = vector.slice(0, i + 1);
-          const typesArray = Array(i+1).fill('bytes4');
-          const vectorHash = ethers.utils.solidityKeccak256(typesArray, currentVector);
+async function approveVectors(sequences, approvedVectorsPolicy) {
+    for (const sequence of sequences) {
+        const vectorHashes = await getAllVectorHashesForSequence(sequence);
+        for (const vectorHash of vectorHashes) {
           await approvedVectorsPolicy.setVectorHashStatus(vectorHash, true);
         }
       }
+}
+
+// sequence is array of sighashes Array<byte4>
+async function getAllVectorHashesForSequence(sequence) {
+    const vectorHashes = new Set(); // Should all be unique anyways...
+    let lastVectorHash = `0x${'0'.repeat(64)}`;
+    for (const sighash of sequence) {
+        // if (!lastVectorHash) { lastVectorHash = solidityKeccak256(['bytes4'], [sighash]);
+        //     vectorHashes.add(lastVectorHash); // I don't think we need this if we allow all length 1 sequences
+        //     continue;
+        // }
+        lastVectorHash = solidityKeccak256(['bytes32', 'bytes4'], [lastVectorHash, sighash]);
+        vectorHashes.add(lastVectorHash);
+    }
+    return Array.from(vectorHashes);
 }
 
 module.exports = {
