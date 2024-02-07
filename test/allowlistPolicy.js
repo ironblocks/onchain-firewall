@@ -33,13 +33,13 @@ describe('Allowlist Policy', function () {
                 .connect(addr2)
                 .setConsumerAllowlist(
                     sampleConsumer.address,
-                    owner.address,
+                    [owner.address],
                     true
                 )
         ).to.be.revertedWith(`AccessControl: account ${addr2.address.toLowerCase()} is missing role 0xace7350211ab645c1937904136ede4855ac3aa1eabb4970e1a51a335d2e19920`);
         await allowlistPolicy.setConsumerAllowlist(
             sampleConsumer.address,
-            owner.address,
+            [owner.address],
             true
         );
         await expect(
@@ -75,13 +75,13 @@ describe('Allowlist Policy', function () {
                     .connect(addr2)
                     .setConsumerAllowlist(
                         sampleConsumer.address,
-                        owner.address,
+                        [owner.address],
                         true
                     );
             await expect(tx).to.be.revertedWith(`AccessControl: account ${addr2.address.toLowerCase()} is missing role 0xace7350211ab645c1937904136ede4855ac3aa1eabb4970e1a51a335d2e19920`);
             await allowlistPolicy.setConsumerAllowlist(
                 sampleConsumer.address,
-                owner.address,
+                [owner.address],
                 true
             );
             tx = sampleConsumer

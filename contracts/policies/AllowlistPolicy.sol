@@ -21,7 +21,9 @@ contract AllowlistPolicy is FirewallPolicyBase {
         // Do nothing
     }
 
-    function setConsumerAllowlist(address consumer, address account, bool status) external onlyRole(POLICY_ADMIN_ROLE) {
-        consumerAllowlist[consumer][account] = status;
+    function setConsumerAllowlist(address consumer, address[] calldata accounts, bool status) external onlyRole(POLICY_ADMIN_ROLE) {
+        for (uint i = 0; i < accounts.length; i++) {
+            consumerAllowlist[consumer][accounts[i]] = status;
+        }
     }
 }

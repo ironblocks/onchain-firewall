@@ -23,8 +23,8 @@ contract FirewallConsumerBase is IFirewallConsumer, Context {
     bytes32 private constant FIREWALL_ADMIN_STORAGE_SLOT = bytes32(uint256(keccak256("eip1967.firewall.admin")) - 1);
     bytes32 private constant NEW_FIREWALL_ADMIN_STORAGE_SLOT = bytes32(uint256(keccak256("eip1967.new.firewall.admin")) - 1);
 
-    // Mapping used for safeFunctionCall
-    mapping (address => bool) public approvedTargets;
+    // This slot is special since it's used for mappings and not a single value
+    bytes32 private constant APPROVED_TARGETS_MAPPING_SLOT = bytes32(uint256(keccak256("eip1967.approved.targets")) - 1);
 
     /**
      * @dev modifier that will run the preExecution and postExecution hooks of the firewall, applying each of
@@ -95,6 +95,19 @@ contract FirewallConsumerBase is IFirewallConsumer, Context {
 
 
     /**
+     * @dev modifier asserting that the target is approved
+     */
+    modifier onlyApprovedTarget(address target) {
+        // We use the same logic that solidity uses for mapping locations, but we add a pseudorandom 
+        // constant "salt" instead of a constant placeholder so that there are no storage collisions
+        // if adding this to an upgradeable contract implementation
+        bytes32 _slot = keccak256(abi.encode(APPROVED_TARGETS_MAPPING_SLOT, target));
+        bool isApprovedTarget = _getValueBySlot(_slot) != bytes32(0);
+        require(isApprovedTarget, "FirewallConsumer: Not approved target");
+        _;
+    }
+
+    /**
      * @dev modifier similar to onlyOwner, but for the firewall admin.
      */
     modifier onlyFirewallAdmin() {
@@ -119,8 +132,11 @@ contract FirewallConsumerBase is IFirewallConsumer, Context {
      * This can be used for multiple purposes, but the initial one is to call `approveCallsViaSignature` before
      * executing a function, allowing synchronous transaction approvals.
      */
-    function safeFunctionCall(address target, bytes calldata targetPayload, bytes calldata data) external payable {
-        require(approvedTargets[target], "FirewallConsumer: Not approved target");
+    function safeFunctionCall(
+        address target,
+        bytes calldata targetPayload,
+        bytes calldata data
+    ) external payable onlyApprovedTarget(target) {
         (bool success, ) = target.call(targetPayload);
         require(success);
         require(msg.sender == _msgSender(), "FirewallConsumer: No meta transactions");
@@ -133,7 +149,10 @@ contract FirewallConsumerBase is IFirewallConsumer, Context {
      * to send any data to an approved target.
      */
     function setApprovedTarget(address target, bool status) external onlyFirewallAdmin {
-        approvedTargets[target] = status;
+        bytes32 _slot = keccak256(abi.encode(APPROVED_TARGETS_MAPPING_SLOT, target));
+        assembly {
+            sstore(_slot, status)
+        }
     }
 
     /**
