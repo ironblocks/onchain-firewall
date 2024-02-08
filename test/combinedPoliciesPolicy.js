@@ -70,7 +70,7 @@ describe('Combined Policies Policy', function () {
         );
         await allowlistPolicy.setConsumerAllowlist(
             sampleConsumerInternals.address,
-            addr1.address,
+            [addr1.address],
             true,
         );
         await combinedPoliciesPolicy.setAllowedCombinations(
@@ -109,7 +109,7 @@ describe('Combined Policies Policy', function () {
         );
         await allowlistPolicy.setConsumerAllowlist(
             sampleConsumer.address,
-            addr1.address,
+            [addr1.address],
             true,
         );
         await combinedPoliciesPolicy.setAllowedCombinations(

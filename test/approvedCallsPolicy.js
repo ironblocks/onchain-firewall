@@ -220,6 +220,108 @@ describe('Approved Calls Policy', () => {
         ).to.be.revertedWith("FirewallConsumer: Not approved target");
     });
 
+
+    it('Firewall safeFunctionCall cannot call approved then unapproved target', async function () {
+        await sampleConsumer.setApprovedTarget(approvedCallsPolicy.address, true);
+        await sampleConsumer.setApprovedTarget(approvedCallsPolicy.address, false);
+        const depositPayload = sampleConsumerIface.encodeFunctionData('deposit()');
+        const depositCallHash = ethers.utils.solidityKeccak256(
+            ['address', 'address', 'address', 'bytes', 'uint256'],
+            [
+                sampleConsumer.address,
+                addr1.address,
+                addr1.address,
+                depositPayload,
+                ethers.utils.parseEther('1'),
+            ]
+        );
+        const packed = ethers.utils.solidityPack(
+            ['bytes32[]', 'uint256', 'address', 'uint256', 'uint256'],
+            [
+                [depositCallHash],
+                ethers.utils.parseEther('1'), // expiration, yuge numba
+                addr1.address,
+                0,
+                31337, // hardhat chainid
+            ]
+        );
+        const messageHash = ethers.utils.solidityKeccak256(
+            ['bytes'], [packed]
+        );
+        const messageHashBytes = ethers.utils.arrayify(messageHash)
+        const signature = await owner.signMessage(messageHashBytes);
+        const approvePayload = approvedCallsPolicyIface.encodeFunctionData(
+            'approveCallsViaSignature',
+            [
+                [depositCallHash],
+                ethers.utils.parseEther('1'),
+                addr1.address,
+                0,
+                signature
+            ]
+        );
+
+        await expect(
+            sampleConsumer
+                .connect(addr1)
+                .safeFunctionCall(approvedCallsPolicy.address, approvePayload, depositPayload, { value: ethers.utils.parseEther('1') })
+        ).to.be.revertedWith("FirewallConsumer: Not approved target");
+    });
+
+    it('Firewall safeFunctionCall cannot call approved then unapproved target, but can when approved targets', async function () {
+        await sampleConsumer.setApprovedTarget(approvedCallsPolicy.address, true);
+        await sampleConsumer.setApprovedTarget(approvedCallsPolicy.address, false);
+        const depositPayload = sampleConsumerIface.encodeFunctionData('deposit()');
+        const depositCallHash = ethers.utils.solidityKeccak256(
+            ['address', 'address', 'address', 'bytes', 'uint256'],
+            [
+                sampleConsumer.address,
+                addr1.address,
+                addr1.address,
+                depositPayload,
+                ethers.utils.parseEther('1'),
+            ]
+        );
+        const packed = ethers.utils.solidityPack(
+            ['bytes32[]', 'uint256', 'address', 'uint256', 'uint256'],
+            [
+                [depositCallHash],
+                ethers.utils.parseEther('1'), // expiration, yuge numba
+                addr1.address,
+                0,
+                31337, // hardhat chainid
+            ]
+        );
+        const messageHash = ethers.utils.solidityKeccak256(
+            ['bytes'], [packed]
+        );
+        const messageHashBytes = ethers.utils.arrayify(messageHash)
+        const signature = await owner.signMessage(messageHashBytes);
+        const approvePayload = approvedCallsPolicyIface.encodeFunctionData(
+            'approveCallsViaSignature',
+            [
+                [depositCallHash],
+                ethers.utils.parseEther('1'),
+                addr1.address,
+                0,
+                signature
+            ]
+        );
+
+        await expect(
+            sampleConsumer
+                .connect(addr1)
+                .safeFunctionCall(approvedCallsPolicy.address, approvePayload, depositPayload, { value: ethers.utils.parseEther('1') })
+        ).to.be.revertedWith("FirewallConsumer: Not approved target");
+        await sampleConsumer.setApprovedTarget(approvedCallsPolicy.address, true);
+        await expect(
+            sampleConsumer
+                .connect(addr1)
+                .safeFunctionCall(approvedCallsPolicy.address, approvePayload, depositPayload, { value: ethers.utils.parseEther('1') })
+        ).to.not.be.reverted;
+    });
+
+
     it('Firewall Approved calls with signature + safeFunctionCall', async function () {
         await sampleConsumer.setApprovedTarget(approvedCallsPolicy.address, true);
         const depositPayload = sampleConsumerIface.encodeFunctionData('deposit()');

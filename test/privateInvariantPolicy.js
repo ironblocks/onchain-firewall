@@ -31,7 +31,7 @@ describe('Private Invariant Policy', function () {
         await sampleInvariantPolicy.setSighashInvariantStorageSlots(
             sampleInvariantConsumer.address,
             sampleInvariantConsumerIface.getSighash('setValue(uint256)'),
-            [ethers.utils.hexZeroPad('0x1', 32)]
+            [ethers.utils.hexZeroPad('0x0', 32)]
         );
         await expect(
             sampleInvariantConsumer
@@ -66,7 +66,7 @@ describe('Private Invariant Policy', function () {
         await sampleInvariantPolicy.setSighashInvariantStorageSlots(
             sampleInvariantConsumer.address,
             sampleInvariantConsumerIface.getSighash('setValue(uint256)'),
-            [ethers.utils.hexZeroPad('0x1', 32)]
+            [ethers.utils.hexZeroPad('0x0', 32)]
         );
         let tx = sampleInvariantConsumer.connect(addr2).setValue(1);
         await expect(tx).to.not.be.reverted;
@@ -97,7 +97,7 @@ describe('Private Invariant Policy', function () {
         await sampleInvariantPolicy.setSighashInvariantStorageSlots(
             sampleInvariantConsumer.address,
             sampleInvariantConsumerIface.getSighash('setMultipleValues(uint256,uint256)'),
-            [ethers.utils.hexZeroPad('0x2', 32), ethers.utils.hexZeroPad('0x3', 32)]
+            [ethers.utils.hexZeroPad('0x1', 32), ethers.utils.hexZeroPad('0x2', 32)]
         );
         await expect(
             sampleInvariantConsumer
@@ -131,7 +131,7 @@ describe('Private Invariant Policy', function () {
         await sampleInvariantPolicy.setSighashInvariantStorageSlots(
             sampleInvariantConsumer.address,
             sampleInvariantConsumerIface.getSighash('setMultipleValues(uint256,uint256)'),
-            [ethers.utils.hexZeroPad('0x2', 32), ethers.utils.hexZeroPad('0x3', 32)]
+            [ethers.utils.hexZeroPad('0x1', 32), ethers.utils.hexZeroPad('0x2', 32)]
         );
         let tx = sampleInvariantConsumer.connect(addr2).setMultipleValues(1, 1);
         await expect(tx).to.not.be.reverted;
