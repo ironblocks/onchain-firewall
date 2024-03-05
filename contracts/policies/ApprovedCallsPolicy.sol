@@ -3,6 +3,7 @@
 // Copyright (c) Ironblocks 2023
 pragma solidity 0.8.19;
 
+import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "./FirewallPolicyBase.sol";
 
 /**
@@ -115,7 +116,7 @@ contract ApprovedCallsPolicy is FirewallPolicyBase {
     ) public pure returns (address) {
         (bytes32 r, bytes32 s, uint8 v) = splitSignature(_signature);
 
-        return ecrecover(_ethSignedMessageHash, v, r, s);
+        return ECDSA.recover(_ethSignedMessageHash, v, r, s);
     }
 
     function splitSignature(
