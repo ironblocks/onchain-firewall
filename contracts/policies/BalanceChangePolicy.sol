@@ -29,7 +29,7 @@ contract BalanceChangePolicy is FirewallPolicyBase {
         address[] memory consumerTokens = _consumerTokens[consumer];
         for (uint i = 0; i < consumerTokens.length; i++) {
             address token = consumerTokens[i];
-            uint preBalance = token == ETH ? address(consumer).balance - value : IERC20(token).balanceOf(consumer);
+            uint preBalance = token == ETH ? consumer.balance - value : IERC20(token).balanceOf(consumer);
             consumerLastBalance[consumer][token].push(preBalance);
         }
     }
@@ -40,7 +40,7 @@ contract BalanceChangePolicy is FirewallPolicyBase {
             address token = consumerTokens[i];
             uint[] storage lastBalanceArray = consumerLastBalance[consumer][token];
             uint lastBalance = lastBalanceArray[lastBalanceArray.length - 1];
-            uint postBalance = token == ETH ? address(consumer).balance : IERC20(token).balanceOf(consumer);
+            uint postBalance = token == ETH ? consumer.balance : IERC20(token).balanceOf(consumer);
             uint difference = postBalance >= lastBalance ? postBalance - lastBalance : lastBalance - postBalance;
             require(difference <= consumerMaxBalanceChange[consumer][token], "BalanceChangePolicy: Balance change exceeds limit");
             lastBalanceArray.pop();
