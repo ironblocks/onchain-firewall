@@ -31,7 +31,7 @@ contract CombinedPoliciesPolicy is FirewallPolicyBase {
             IFirewallPolicy policy = IFirewallPolicy(policies[i]);
             try policy.preExecution(consumer, sender, data, value) {
                 currentResult[i] = true;
-            } catch Error(string memory) {
+            } catch {
                 // Do nothing
             }
         }
@@ -45,7 +45,7 @@ contract CombinedPoliciesPolicy is FirewallPolicyBase {
             IFirewallPolicy policy = IFirewallPolicy(policies[i]);
             try policy.postExecution(consumer, sender, data, value) {
                 // Do nothing
-            } catch Error(string memory) {
+            } catch {
                 currentResult[i] = false;
             }
         }
