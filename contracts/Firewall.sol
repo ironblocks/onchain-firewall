@@ -24,7 +24,7 @@ import "./interfaces/IFirewallPrivateInvariantsPolicy.sol";
  */
 contract Firewall is IFirewall, Ownable2Step {
 
-    event PolicyStatusUpdate(address policy, bool status);
+    event PolicyStatusUpdate(address indexed policy, bool status);
     event GlobalPolicyAdded(address indexed consumer, address policy);
     event GlobalPolicyRemoved(address indexed consumer, address policy);
     event PolicyAdded(address indexed consumer, bytes4 methodSig, address policy);
