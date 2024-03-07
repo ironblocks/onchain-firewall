@@ -3,8 +3,8 @@
 // Copyright (c) Ironblocks 2023
 pragma solidity 0.8.19;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "./FirewallPolicyBase.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {FirewallPolicyBase} from "./FirewallPolicyBase.sol";
 
 /**
  * @dev This policy reverts if a given method is called.

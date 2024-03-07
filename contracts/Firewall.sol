@@ -3,11 +3,11 @@
 // Copyright (c) Ironblocks 2023
 pragma solidity 0.8.19;
 
-import "@openzeppelin/contracts/access/Ownable2Step.sol";
-import "./interfaces/IFirewall.sol";
-import "./interfaces/IFirewallConsumer.sol";
-import "./interfaces/IFirewallPolicy.sol";
-import "./interfaces/IFirewallPrivateInvariantsPolicy.sol";
+import {Ownable2Step} from "@openzeppelin/contracts/access/Ownable2Step.sol";
+import {IFirewall} from "./interfaces/IFirewall.sol";
+import {IFirewallConsumer} from "./interfaces/IFirewallConsumer.sol";
+import {IFirewallPolicy} from "./interfaces/IFirewallPolicy.sol";
+import {IFirewallPrivateInvariantsPolicy} from "./interfaces/IFirewallPrivateInvariantsPolicy.sol";
 
 /**
  * @title Firewall
