@@ -18,25 +18,25 @@ contract AdminCallPolicy is FirewallPolicyBase {
     bytes32 public constant APPROVER_ROLE = keccak256("APPROVER_ROLE");
 
     // The default amount of time a call hash is valid for after it is approved.
-    uint public expirationTime = 1 days;
+    uint256 public expirationTime = 1 days;
     // The timestamp that a call hash was approved at (if approved at all).
-    mapping (bytes32 => uint) public adminCallHashApprovalTimestamp;
+    mapping (bytes32 => uint256) public adminCallHashApprovalTimestamp;
 
     constructor(address _firewallAddress) FirewallPolicyBase() {
         authorizedExecutors[_firewallAddress] = true;
     }
 
-    function preExecution(address consumer, address sender, bytes calldata data, uint value) external isAuthorized(consumer) {
+    function preExecution(address consumer, address sender, bytes calldata data, uint256 value) external isAuthorized(consumer) {
         bytes32 callHash = _getCallHash(consumer, sender, tx.origin, data, value);
         require(adminCallHashApprovalTimestamp[callHash] > 0, "AdminCallPolicy: Call not approved");
         require(adminCallHashApprovalTimestamp[callHash] + expirationTime > block.timestamp, "AdminCallPolicy: Call expired");
         adminCallHashApprovalTimestamp[callHash] = 0;
     }
 
-    function postExecution(address, address, bytes calldata, uint) external override {
+    function postExecution(address, address, bytes calldata, uint256) external override {
     }
 
-    function setExpirationTime(uint _expirationTime) external onlyRole(APPROVER_ROLE) {
+    function setExpirationTime(uint256 _expirationTime) external onlyRole(APPROVER_ROLE) {
         expirationTime = _expirationTime;
     }
 
@@ -49,7 +49,7 @@ contract AdminCallPolicy is FirewallPolicyBase {
         address sender,
         address origin,
         bytes memory data,
-        uint value
+        uint256 value
     ) internal pure returns (bytes32) {
         return keccak256(abi.encodePacked(consumer, sender, origin, data, value));
     }

@@ -22,14 +22,14 @@ contract ForbiddenMethodsPolicy is FirewallPolicyBase {
     mapping (address => mapping (bytes4 => bool)) public consumerMethodStatus;
     mapping (bytes32 => bool) public hasEnteredForbiddenMethod;
 
-    function preExecution(address consumer, address, bytes calldata data, uint) external override {
+    function preExecution(address consumer, address, bytes calldata data, uint256) external override {
         bytes32 currentContext = keccak256(abi.encodePacked(tx.origin, block.number, tx.gasprice));
         if (consumerMethodStatus[consumer][bytes4(data)]) {
             hasEnteredForbiddenMethod[currentContext] = true;
         }
     }
 
-    function postExecution(address, address, bytes calldata, uint) external view override {
+    function postExecution(address, address, bytes calldata, uint256) external view override {
         bytes32 currentContext = keccak256(abi.encodePacked(tx.origin, block.number, tx.gasprice));
         require(!hasEnteredForbiddenMethod[currentContext], "Forbidden method");
     }

@@ -13,16 +13,16 @@ contract BlocklistPolicy is FirewallPolicyBase {
 
     mapping (address => mapping (address => bool)) public consumerBlocklist;
 
-    function preExecution(address consumer, address sender, bytes calldata, uint) external view override {
+    function preExecution(address consumer, address sender, bytes calldata, uint256) external view override {
         require(!consumerBlocklist[consumer][sender], "BlocklistPolicy: Sender not allowed");
     }
 
-    function postExecution(address, address, bytes calldata, uint) external override {
+    function postExecution(address, address, bytes calldata, uint256) external override {
         // Do nothing
     }
 
     function setConsumerBlocklist(address consumer, address[] calldata accounts, bool status) external onlyRole(POLICY_ADMIN_ROLE) {
-        for (uint i = 0; i < accounts.length; i++) {
+        for (uint256 i = 0; i < accounts.length; i++) {
             consumerBlocklist[consumer][accounts[i]] = status;
         }
     }

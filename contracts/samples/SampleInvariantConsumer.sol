@@ -10,17 +10,17 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract SampleInvariantConsumer is FirewallConsumerBase {
 
-    uint private value1;
-    uint private value2;
-    uint private value3;
+    uint256 private value1;
+    uint256 private value2;
+    uint256 private value3;
 
     constructor(address firewall) FirewallConsumerBase(firewall, msg.sender) {}
 
-    function setValue(uint newValue) external firewallProtected invariantProtected {
+    function setValue(uint256 newValue) external firewallProtected invariantProtected {
         value1 = newValue;        
     }
 
-    function setMultipleValues(uint newValue2, uint newValue3) external firewallProtected invariantProtected {
+    function setMultipleValues(uint256 newValue2, uint256 newValue3) external firewallProtected invariantProtected {
         value2 = newValue2;        
         value3 = newValue3;        
     }

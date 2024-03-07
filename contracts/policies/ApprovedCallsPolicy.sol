@@ -37,10 +37,10 @@ contract ApprovedCallsPolicy is FirewallPolicyBase {
     /**
      * @dev Before executing a call, check that the call has been approved by a signer.
      */
-    function preExecution(address consumer, address sender, bytes calldata data, uint value) external notInSimulation isAuthorized(consumer) {
+    function preExecution(address consumer, address sender, bytes calldata data, uint256 value) external notInSimulation isAuthorized(consumer) {
         bytes32[] storage approvedCallHashes = approvedCalls[tx.origin];
         require(approvedCallHashes.length > 0, "ApprovedCallsPolicy: call hashes empty");
-        uint expiration = approvedCallsExpiration[tx.origin];
+        uint256 expiration = approvedCallsExpiration[tx.origin];
         require(expiration > block.timestamp, "ApprovedCallsPolicy: expired");
         bytes32 callHash = getCallHash(consumer, sender, tx.origin, data, value);
         bytes32 nextHash = approvedCallHashes[approvedCallHashes.length - 1];
@@ -48,7 +48,7 @@ contract ApprovedCallsPolicy is FirewallPolicyBase {
         approvedCallHashes.pop();
     }
 
-    function postExecution(address, address, bytes calldata, uint) external override {
+    function postExecution(address, address, bytes calldata, uint256) external override {
     }
 
     /**
@@ -63,7 +63,7 @@ contract ApprovedCallsPolicy is FirewallPolicyBase {
         bytes32[] calldata _callHashes,
         uint256 expiration,
         address txOrigin,
-        uint nonce,
+        uint256 nonce,
         bytes memory signature
     ) external {
         require(nonce == nonces[txOrigin], "ApprovedCallsPolicy: invalid nonce");
@@ -90,7 +90,7 @@ contract ApprovedCallsPolicy is FirewallPolicyBase {
         address sender,
         address origin,
         bytes memory data,
-        uint value
+        uint256 value
     ) internal pure returns (bytes32) {
         return keccak256(abi.encodePacked(consumer, sender, origin, data, value));
     }

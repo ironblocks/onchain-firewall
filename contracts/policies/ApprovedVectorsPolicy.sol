@@ -17,14 +17,14 @@ import "./FirewallPolicyBase.sol";
 contract ApprovedVectorsPolicy is FirewallPolicyBase {
 
     // Execution state
-    mapping (address => mapping(uint => bytes32)) public originCurrentVectorHash;
+    mapping (address => mapping(uint256 => bytes32)) public originCurrentVectorHash;
     mapping (bytes32 => bool) public approvedVectorHashes;
 
     constructor(address _firewallAddress) FirewallPolicyBase() {
         authorizedExecutors[_firewallAddress] = true;
     }
 
-    function preExecution(address consumer, address, bytes calldata data, uint) external isAuthorized(consumer) {
+    function preExecution(address consumer, address, bytes calldata data, uint256) external isAuthorized(consumer) {
         bytes32 currentVectorHash = originCurrentVectorHash[tx.origin][block.number];
         bytes4 selector = bytes4(data);
         bytes32 newVectorHash = keccak256(abi.encodePacked(currentVectorHash, selector));
@@ -32,18 +32,18 @@ contract ApprovedVectorsPolicy is FirewallPolicyBase {
         originCurrentVectorHash[tx.origin][block.number] = newVectorHash;
     }
 
-    function postExecution(address, address, bytes calldata, uint) external override {
+    function postExecution(address, address, bytes calldata, uint256) external override {
     }
 
 
     function approveMultipleHashes(bytes32[] calldata _vectorHashes) external onlyRole(POLICY_ADMIN_ROLE) {
-        for (uint i = 0; i < _vectorHashes.length; i++) {
+        for (uint256 i = 0; i < _vectorHashes.length; i++) {
             approvedVectorHashes[_vectorHashes[i]] = true;
         }
     }
 
     function removeMultipleHashes(bytes32[] calldata _vectorHashes) external onlyRole(POLICY_ADMIN_ROLE) {
-        for (uint i = 0; i < _vectorHashes.length; i++) {
+        for (uint256 i = 0; i < _vectorHashes.length; i++) {
             approvedVectorHashes[_vectorHashes[i]] = false;
         }
     }

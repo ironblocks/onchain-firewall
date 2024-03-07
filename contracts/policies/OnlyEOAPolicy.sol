@@ -16,11 +16,11 @@ contract OnlyEOAPolicy is FirewallPolicyBase {
 
     mapping (address => bool) public allowedContracts;
 
-    function preExecution(address, address sender, bytes calldata, uint) external view override {
+    function preExecution(address, address sender, bytes calldata, uint256) external view override {
         require(sender == tx.origin || allowedContracts[sender], "ONLY EOA");
     }
 
-    function postExecution(address, address, bytes calldata, uint) external override {}
+    function postExecution(address, address, bytes calldata, uint256) external override {}
 
     function setAllowedContracts(address contractAddress, bool status) external onlyRole(POLICY_ADMIN_ROLE) {
         allowedContracts[contractAddress] = status;

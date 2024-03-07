@@ -36,7 +36,7 @@ contract FirewallConsumerBase is IFirewallConsumer, Context {
             _;
             return;
         }
-        uint value = _msgValue();
+        uint256 value = _msgValue();
         IFirewall(firewall).preExecution(msg.sender, msg.data, value);
         _; 
         IFirewall(firewall).postExecution(msg.sender, msg.data, value);
@@ -53,7 +53,7 @@ contract FirewallConsumerBase is IFirewallConsumer, Context {
             _;
             return;
         }
-        uint value = _msgValue();
+        uint256 value = _msgValue();
         IFirewall(firewall).preExecution(msg.sender, data, value);
         _; 
         IFirewall(firewall).postExecution(msg.sender, data, value);
@@ -69,7 +69,7 @@ contract FirewallConsumerBase is IFirewallConsumer, Context {
             _;
             return;
         }
-        uint value = _msgValue();
+        uint256 value = _msgValue();
         IFirewall(firewall).preExecution(msg.sender, abi.encodePacked(selector), value);
         _; 
         IFirewall(firewall).postExecution(msg.sender, abi.encodePacked(selector), value);
@@ -85,7 +85,7 @@ contract FirewallConsumerBase is IFirewallConsumer, Context {
             _;
             return;
         }
-        uint value = _msgValue();
+        uint256 value = _msgValue();
         bytes32[] memory storageSlots = IFirewall(firewall).preExecutionPrivateInvariants(msg.sender, msg.data, value);
         bytes32[] memory preValues = _readStorage(storageSlots);
         _; 
@@ -185,7 +185,7 @@ contract FirewallConsumerBase is IFirewallConsumer, Context {
         _setAddressBySlot(FIREWALL_ADMIN_STORAGE_SLOT, msg.sender);
     }
 
-    function _msgValue() internal view returns (uint value) {
+    function _msgValue() internal view returns (uint256 value) {
         // We do this because msg.value can only be accessed in payable functions.
         assembly {
             value := callvalue()

@@ -20,12 +20,12 @@ contract NonReentrantPolicy is FirewallPolicyBase {
         authorizedExecutors[_firewallAddress] = true;
     }
 
-    function preExecution(address consumer, address, bytes calldata, uint) external isAuthorized(consumer) {
+    function preExecution(address consumer, address, bytes calldata, uint256) external isAuthorized(consumer) {
         require(!hasEnteredConsumer[consumer], "NO REENTRANCY");
         hasEnteredConsumer[consumer] = true;
     }
 
-    function postExecution(address consumer, address, bytes calldata, uint) external isAuthorized(consumer) {
+    function postExecution(address consumer, address, bytes calldata, uint256) external isAuthorized(consumer) {
         hasEnteredConsumer[consumer] = false;
     }
 

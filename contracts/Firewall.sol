@@ -60,19 +60,19 @@ contract Firewall is IFirewall, Ownable2Step {
     /**
      * @dev Runs the preExecution hook of all subscribed policies.
      */
-    function preExecution(address sender, bytes calldata data, uint value) external override {
+    function preExecution(address sender, bytes calldata data, uint256 value) external override {
         bytes4 selector = bytes4(data);
         address[] memory policies = subscribedPolicies[msg.sender][selector];
         address[] memory globalPolicies = subscribedGlobalPolicies[msg.sender];
         if (dryrunEnabled[msg.sender]) {
-            for (uint i = 0; i < policies.length; i++) {
+            for (uint256 i = 0; i < policies.length; i++) {
                 try IFirewallPolicy(policies[i]).preExecution(msg.sender, sender, data, value) {
                     emit DryrunPolicyPreSuccess(msg.sender, selector, policies[i]);
                 } catch(bytes memory err) {
                     emit DryrunPolicyPreError(msg.sender, selector, policies[i], err);
                 }
             }
-            for (uint i = 0; i < globalPolicies.length; i++) {
+            for (uint256 i = 0; i < globalPolicies.length; i++) {
                 try IFirewallPolicy(globalPolicies[i]).preExecution(msg.sender, sender, data, value) {
                     emit DryrunPolicyPreSuccess(msg.sender, selector, globalPolicies[i]);
                 } catch(bytes memory err) {
@@ -80,10 +80,10 @@ contract Firewall is IFirewall, Ownable2Step {
                 }
             }
         } else {
-            for (uint i = 0; i < policies.length; i++) {
+            for (uint256 i = 0; i < policies.length; i++) {
                 IFirewallPolicy(policies[i]).preExecution(msg.sender, sender, data, value);
             }
-            for (uint i = 0; i < globalPolicies.length; i++) {
+            for (uint256 i = 0; i < globalPolicies.length; i++) {
                 IFirewallPolicy(globalPolicies[i]).preExecution(msg.sender, sender, data, value);
             }
         }
@@ -92,19 +92,19 @@ contract Firewall is IFirewall, Ownable2Step {
     /**
      * @dev Runs the postExecution hook of all subscribed policies.
      */
-    function postExecution(address sender, bytes calldata data, uint value) external override {
+    function postExecution(address sender, bytes calldata data, uint256 value) external override {
         bytes4 selector = bytes4(data);
         address[] memory policies = subscribedPolicies[msg.sender][selector];
         address[] memory globalPolicies = subscribedGlobalPolicies[msg.sender];
         if (dryrunEnabled[msg.sender]) {
-            for (uint i = 0; i < policies.length; i++) {
+            for (uint256 i = 0; i < policies.length; i++) {
                 try IFirewallPolicy(policies[i]).postExecution(msg.sender, sender, data, value) {
                     emit DryrunPolicyPostSuccess(msg.sender, selector, policies[i]);
                 } catch(bytes memory err) {
                     emit DryrunPolicyPostError(msg.sender, selector, policies[i], err);
                 }
             }
-            for (uint i = 0; i < globalPolicies.length; i++) {
+            for (uint256 i = 0; i < globalPolicies.length; i++) {
                 try IFirewallPolicy(globalPolicies[i]).postExecution(msg.sender, sender, data, value) {
                     emit DryrunPolicyPostSuccess(msg.sender, selector, globalPolicies[i]);
                 } catch(bytes memory err) {
@@ -112,10 +112,10 @@ contract Firewall is IFirewall, Ownable2Step {
                 }
             }
         } else {
-            for (uint i = 0; i < policies.length; i++) {
+            for (uint256 i = 0; i < policies.length; i++) {
                 IFirewallPolicy(policies[i]).postExecution(msg.sender, sender, data, value);
             }
-            for (uint i = 0; i < globalPolicies.length; i++) {
+            for (uint256 i = 0; i < globalPolicies.length; i++) {
                 IFirewallPolicy(globalPolicies[i]).postExecution(msg.sender, sender, data, value);
             }
         }
@@ -128,7 +128,7 @@ contract Firewall is IFirewall, Ownable2Step {
     function preExecutionPrivateInvariants(
         address sender,
         bytes calldata data,
-        uint value
+        uint256 value
     ) external override returns (bytes32[] memory storageSlots) {
         bytes4 selector = bytes4(data);
         address privateInvariantsPolicy = subscribedPrivateInvariantsPolicy[msg.sender][selector];
@@ -153,7 +153,7 @@ contract Firewall is IFirewall, Ownable2Step {
     function postExecutionPrivateInvariants(
         address sender,
         bytes memory data,
-        uint value,
+        uint256 value,
         bytes32[] calldata preValues,
         bytes32[] calldata postValues
     ) external override {
@@ -208,7 +208,7 @@ contract Firewall is IFirewall, Ownable2Step {
      * Note that the consumer admin needs to be the same for all consumers
      */
     function addGlobalPolicyForConsumers(address[] calldata consumers, address policy) external {
-        for (uint i = 0; i < consumers.length; i++) {
+        for (uint256 i = 0; i < consumers.length; i++) {
             require(msg.sender == IFirewallConsumer(consumers[i]).firewallAdmin(), "Firewall: not consumer admin");
             _addGlobalPolicy(consumers[i], policy);
         }
@@ -219,7 +219,7 @@ contract Firewall is IFirewall, Ownable2Step {
      * Note that the consumer admin needs to be the same for all consumers
      */
     function removeGlobalPolicyForConsumers(address[] calldata consumers, address policy) external {
-        for (uint i = 0; i < consumers.length; i++) {
+        for (uint256 i = 0; i < consumers.length; i++) {
             require(msg.sender == IFirewallConsumer(consumers[i]).firewallAdmin(), "Firewall: not consumer admin");
             _removeGlobalPolicy(consumers[i], policy);
         }
@@ -229,7 +229,7 @@ contract Firewall is IFirewall, Ownable2Step {
      * @dev Admin only function allowing the consumers admin to add multiple policies to the consumers subscribed policies.
      */
     function addPolicies(address consumer, bytes4[] calldata methodSigs, address[] calldata policies) external onlyConsumerAdmin(consumer) {
-        for (uint i = 0; i < policies.length; i++) {
+        for (uint256 i = 0; i < policies.length; i++) {
             _addPolicy(consumer, methodSigs[i], policies[i]);
         }
     }
@@ -245,7 +245,7 @@ contract Firewall is IFirewall, Ownable2Step {
      * @dev Admin only function allowing the consumers admin to remove multiple policies from the consumers subscribed policies.
      */
     function removePolicies(address consumer, bytes4[] calldata methodSigs, address[] calldata policies) external onlyConsumerAdmin(consumer) {
-        for (uint i = 0; i < policies.length; i++) {
+        for (uint256 i = 0; i < policies.length; i++) {
             _removePolicy(consumer, methodSigs[i], policies[i]);
         }
     }
@@ -261,7 +261,7 @@ contract Firewall is IFirewall, Ownable2Step {
      * @dev Admin only function allowing the consumers admin to set the private variables policies
      */
     function setPrivateInvariantsPolicy(address consumer, bytes4[] calldata methodSigs, address[] calldata policies) external onlyConsumerAdmin(consumer) {
-        for (uint i = 0; i < policies.length; i++) {
+        for (uint256 i = 0; i < policies.length; i++) {
             require(approvedPolicies[policies[i]], "Firewall: policy not approved");
             subscribedPrivateInvariantsPolicy[consumer][methodSigs[i]] = policies[i];
             emit InvariantPolicySet(consumer, methodSigs[i], policies[i]);
@@ -285,7 +285,7 @@ contract Firewall is IFirewall, Ownable2Step {
     function _addPolicy(address consumer, bytes4 methodSig, address policy) internal {
         require(approvedPolicies[policy], "Firewall: policy not approved");
         address[] memory policies = subscribedPolicies[consumer][methodSig];
-        for (uint i = 0; i < policies.length; i++) {
+        for (uint256 i = 0; i < policies.length; i++) {
             require(policy != policies[i], "Firewall: policy already exists");
         }
         subscribedPolicies[consumer][methodSig].push(policy);
@@ -294,7 +294,7 @@ contract Firewall is IFirewall, Ownable2Step {
 
     function _removePolicy(address consumer, bytes4 methodSig, address policy) internal {
         address[] storage policies = subscribedPolicies[consumer][methodSig];
-        for (uint i = 0; i < policies.length; i++) {
+        for (uint256 i = 0; i < policies.length; i++) {
             if (policy == policies[i]) {
                 policies[i] = policies[policies.length - 1];
                 policies.pop();
@@ -307,7 +307,7 @@ contract Firewall is IFirewall, Ownable2Step {
     function _addGlobalPolicy(address consumer, address policy) internal {
         require(approvedPolicies[policy], "Firewall: policy not approved");
         address[] memory policies = subscribedGlobalPolicies[consumer];
-        for (uint i = 0; i < policies.length; i++) {
+        for (uint256 i = 0; i < policies.length; i++) {
             require(policy != policies[i], "Firewall: policy already exists");
         }
         subscribedGlobalPolicies[consumer].push(policy);
@@ -316,7 +316,7 @@ contract Firewall is IFirewall, Ownable2Step {
 
     function _removeGlobalPolicy(address consumer, address policy) internal {
         address[] storage globalPolicies = subscribedGlobalPolicies[consumer];
-        for (uint i = 0; i < globalPolicies.length; i++) {
+        for (uint256 i = 0; i < globalPolicies.length; i++) {
             if (policy == globalPolicies[i]) {
                 globalPolicies[i] = globalPolicies[globalPolicies.length - 1];
                 globalPolicies.pop();

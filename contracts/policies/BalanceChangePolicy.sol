@@ -13,10 +13,10 @@ import "./FirewallPolicyBase.sol";
 contract BalanceChangePolicy is FirewallPolicyBase {
     address public constant ETH = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
-    // consumer => token => uint
-    mapping (address => mapping (address => uint)) public consumerMaxBalanceChange;
-    // consumer => token => uint[]
-    mapping (address => mapping(address => uint[])) public consumerLastBalance;
+    // consumer => token => uint256
+    mapping (address => mapping (address => uint256)) public consumerMaxBalanceChange;
+    // consumer => token => uint256[]
+    mapping (address => mapping(address => uint256[])) public consumerLastBalance;
 
     mapping (address => address[]) private _consumerTokens;
     mapping (address => mapping(address => bool)) private _monitoringToken;
@@ -25,23 +25,23 @@ contract BalanceChangePolicy is FirewallPolicyBase {
         authorizedExecutors[_firewallAddress] = true;
     }
 
-    function preExecution(address consumer, address, bytes memory, uint value) external isAuthorized(consumer) {
+    function preExecution(address consumer, address, bytes memory, uint256 value) external isAuthorized(consumer) {
         address[] memory consumerTokens = _consumerTokens[consumer];
-        for (uint i = 0; i < consumerTokens.length; i++) {
+        for (uint256 i = 0; i < consumerTokens.length; i++) {
             address token = consumerTokens[i];
-            uint preBalance = token == ETH ? address(consumer).balance - value : IERC20(token).balanceOf(consumer);
+            uint256 preBalance = token == ETH ? address(consumer).balance - value : IERC20(token).balanceOf(consumer);
             consumerLastBalance[consumer][token].push(preBalance);
         }
     }
 
-    function postExecution(address consumer, address, bytes memory, uint) external isAuthorized(consumer) {
+    function postExecution(address consumer, address, bytes memory, uint256) external isAuthorized(consumer) {
         address[] memory consumerTokens = _consumerTokens[consumer];
-        for (uint i = 0; i < consumerTokens.length; i++) {
+        for (uint256 i = 0; i < consumerTokens.length; i++) {
             address token = consumerTokens[i];
-            uint[] storage lastBalanceArray = consumerLastBalance[consumer][token];
-            uint lastBalance = lastBalanceArray[lastBalanceArray.length - 1];
-            uint postBalance = token == ETH ? address(consumer).balance : IERC20(token).balanceOf(consumer);
-            uint difference = postBalance >= lastBalance ? postBalance - lastBalance : lastBalance - postBalance;
+            uint256[] storage lastBalanceArray = consumerLastBalance[consumer][token];
+            uint256 lastBalance = lastBalanceArray[lastBalanceArray.length - 1];
+            uint256 postBalance = token == ETH ? address(consumer).balance : IERC20(token).balanceOf(consumer);
+            uint256 difference = postBalance >= lastBalance ? postBalance - lastBalance : lastBalance - postBalance;
             require(difference <= consumerMaxBalanceChange[consumer][token], "BalanceChangePolicy: Balance change exceeds limit");
             lastBalanceArray.pop();
         }
@@ -52,7 +52,7 @@ contract BalanceChangePolicy is FirewallPolicyBase {
         address token
     ) external onlyRole(POLICY_ADMIN_ROLE) {
         address[] storage consumerTokens = _consumerTokens[consumer];
-        for (uint i = 0; i < consumerTokens.length; i++) {
+        for (uint256 i = 0; i < consumerTokens.length; i++) {
             if (token == consumerTokens[i]) {
                 consumerTokens[i] = consumerTokens[consumerTokens.length - 1];
                 consumerTokens.pop();
@@ -66,7 +66,7 @@ contract BalanceChangePolicy is FirewallPolicyBase {
     function setConsumerMaxBalanceChange(
         address consumer,
         address token,
-        uint maxBalanceChange
+        uint256 maxBalanceChange
     ) external onlyRole(POLICY_ADMIN_ROLE) {
         consumerMaxBalanceChange[consumer][token] = maxBalanceChange;
         if (!_monitoringToken[consumer][token]) {

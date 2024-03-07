@@ -8,13 +8,13 @@ interface IFirewallPrivateInvariantsPolicy {
         address consumer,
         address sender,
         bytes memory data,
-        uint value
+        uint256 value
     ) external returns (bytes32[] calldata);
     function postExecution(
         address consumer,
         address sender,
         bytes memory data,
-        uint value,
+        uint256 value,
         bytes32[] calldata preValues,
         bytes32[] calldata postValues
     ) external;
