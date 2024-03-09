@@ -20,6 +20,8 @@ contract FirewallTransparentUpgradeableProxy is TransparentUpgradeableProxy, IFi
     bytes32 private constant FIREWALL_STORAGE_SLOT = bytes32(uint256(keccak256("eip1967.firewall")) - 1);
     bytes32 private constant FIREWALL_ADMIN_STORAGE_SLOT = bytes32(uint256(keccak256("eip1967.firewall.admin")) - 1);
 
+    event FirewallAdminUpdated(address newAdmin);
+    event FirewallUpdated(address newFirewall);
     event StaticCallCheck();
 
     /**
@@ -142,6 +144,7 @@ contract FirewallTransparentUpgradeableProxy is TransparentUpgradeableProxy, IFi
      */
     function _changeFirewallAdmin(address _firewallAdmin) private {
         StorageSlot.getAddressSlot(FIREWALL_ADMIN_STORAGE_SLOT).value = _firewallAdmin;
+        emit FirewallAdminUpdated(_firewallAdmin);
     }
 
     /**
@@ -156,6 +159,7 @@ contract FirewallTransparentUpgradeableProxy is TransparentUpgradeableProxy, IFi
      */
     function _changeFirewall(address _firewall) private {
         StorageSlot.getAddressSlot(FIREWALL_STORAGE_SLOT).value = _firewall;
+        emit FirewallUpdated(_firewall);
     }
 
     function _internalDelegate(address _toimplementation) private firewallProtected returns (bytes memory) {

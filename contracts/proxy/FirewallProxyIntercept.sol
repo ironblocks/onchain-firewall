@@ -21,6 +21,9 @@ contract FirewallProxyIntercept is TransparentUpgradeableProxy, IFirewallConsume
     bytes32 private constant FIREWALL_ADMIN_STORAGE_SLOT = bytes32(uint256(keccak256("eip1967.firewall.admin")) - 1);
     bytes32 private constant FIREWALL_INTERCEPT_IMPLEMENTATION_STORAGE_SLOT = bytes32(uint256(keccak256("eip1967.firewall.intercept.implementation")) - 1);
 
+    event FirewallAdminUpdated(address newAdmin);
+    event FirewallUpdated(address newFirewall);
+    event InterceptImplementationUpdated(address newInterceptImplementation);
     event StaticCallCheck();
 
     /**
@@ -147,6 +150,7 @@ contract FirewallProxyIntercept is TransparentUpgradeableProxy, IFirewallConsume
      */
     function _changeFirewallAdmin(address _firewallAdmin) private {
         StorageSlot.getAddressSlot(FIREWALL_ADMIN_STORAGE_SLOT).value = _firewallAdmin;
+        emit FirewallAdminUpdated(_firewallAdmin);
     }
 
     /**
@@ -154,6 +158,7 @@ contract FirewallProxyIntercept is TransparentUpgradeableProxy, IFirewallConsume
      */
     function _changeFirewallInterceptImplementation(address _firewallInterceptImplementation) private {
         StorageSlot.getAddressSlot(FIREWALL_INTERCEPT_IMPLEMENTATION_STORAGE_SLOT).value = _firewallInterceptImplementation;
+        emit InterceptImplementationUpdated(_firewallInterceptImplementation);
     }
 
     /**
@@ -168,6 +173,7 @@ contract FirewallProxyIntercept is TransparentUpgradeableProxy, IFirewallConsume
      */
     function _changeFirewall(address _firewall) private {
         StorageSlot.getAddressSlot(FIREWALL_STORAGE_SLOT).value = _firewall;
+        emit FirewallUpdated(_firewall);
     }
 
     function _internalDelegate(address _toimplementation) private firewallProtected returns (bytes memory) {
