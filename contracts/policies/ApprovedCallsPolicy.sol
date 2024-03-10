@@ -5,6 +5,16 @@ pragma solidity 0.8.19;
 
 import "./FirewallPolicyBase.sol";
 
+interface IApprovedCallsPolicy {
+    function approveCallsViaSignature(
+        bytes32[] calldata _callHashes,
+        uint256 expiration,
+        address txOrigin,
+        uint nonce,
+        bytes memory signature
+    ) external;
+}
+
 /**
  * @dev This policy requires a transaction to a consumer to be signed and approved on chain before execution.
  *
@@ -83,6 +93,13 @@ contract ApprovedCallsPolicy is FirewallPolicyBase {
     ) external onlyRole(SIGNER_ROLE) {
         approvedCalls[txOrigin] = _callHashes;
         approvedCallsExpiration[txOrigin] = expiration;
+    }
+
+    /**
+     * @dev See {IERC165-supportsInterface}.
+     */
+    function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
+        return interfaceId == type(IApprovedCallsPolicy).interfaceId || super.supportsInterface(interfaceId);
     }
 
     function getCallHash(

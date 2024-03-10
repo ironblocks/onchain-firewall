@@ -3,6 +3,7 @@
 // Copyright (c) Ironblocks 2023
 pragma solidity 0.8.19;
 
+import "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
 import "./interfaces/IFirewall.sol";
@@ -22,6 +23,7 @@ contract FirewallConsumerBase is IFirewallConsumer, Context {
     bytes32 private constant FIREWALL_STORAGE_SLOT = bytes32(uint256(keccak256("eip1967.firewall")) - 1);
     bytes32 private constant FIREWALL_ADMIN_STORAGE_SLOT = bytes32(uint256(keccak256("eip1967.firewall.admin")) - 1);
     bytes32 private constant NEW_FIREWALL_ADMIN_STORAGE_SLOT = bytes32(uint256(keccak256("eip1967.new.firewall.admin")) - 1);
+    bytes4 private constant SUPPORTS_APPROVE_VIA_SIGNATURE_INTERFACE_ID = bytes4(0x0c908cff); // sighash of approveCallsViaSignature
 
     // This slot is special since it's used for mappings and not a single value
     bytes32 private constant APPROVED_TARGETS_MAPPING_SLOT = bytes32(uint256(keccak256("eip1967.approved.targets")) - 1);
@@ -104,6 +106,7 @@ contract FirewallConsumerBase is IFirewallConsumer, Context {
         bytes32 _slot = keccak256(abi.encode(APPROVED_TARGETS_MAPPING_SLOT, target));
         bool isApprovedTarget = _getValueBySlot(_slot) != bytes32(0);
         require(isApprovedTarget, "FirewallConsumer: Not approved target");
+        require(ERC165Checker.supportsERC165InterfaceUnchecked(target, SUPPORTS_APPROVE_VIA_SIGNATURE_INTERFACE_ID));
         _;
     }
 
