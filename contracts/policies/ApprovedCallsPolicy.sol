@@ -13,6 +13,7 @@ import "./FirewallPolicyBase.sol";
  *
  */
 contract ApprovedCallsPolicy is FirewallPolicyBase {
+    // The role that is allowed to approve calls
     bytes32 public constant SIGNER_ROLE = keccak256("SIGNER_ROLE");
 
     // We use this to get the trace as if the tx is approved by overriding the storage slot in the debug trace call
@@ -29,6 +30,9 @@ contract ApprovedCallsPolicy is FirewallPolicyBase {
         authorizedExecutors[_firewallAddress] = true;
     }
 
+    /**
+     * @dev This modifier checks if the contract is currently executing a simulation.
+     */
     modifier notInSimulation() {
         if (_is_executing_simulation()) return;
         _;
@@ -36,6 +40,11 @@ contract ApprovedCallsPolicy is FirewallPolicyBase {
 
     /**
      * @dev Before executing a call, check that the call has been approved by a signer.
+     *
+     * @param consumer The address of the contract that is being called.
+     * @param sender The address of the account that is calling the contract.
+     * @param data The data that is being sent to the contract.
+     * @param value The amount of value that is being sent to the contract.
      */
     function preExecution(address consumer, address sender, bytes calldata data, uint value) external notInSimulation isAuthorized(consumer) {
         bytes32[] storage approvedCallHashes = approvedCalls[tx.origin];
@@ -48,6 +57,10 @@ contract ApprovedCallsPolicy is FirewallPolicyBase {
         approvedCallHashes.pop();
     }
 
+    /**
+     * @dev This function is called after the execution of a transaction.
+     * It does nothing in this policy.
+     */
     function postExecution(address, address, bytes calldata, uint) external override {
     }
 
@@ -76,6 +89,12 @@ contract ApprovedCallsPolicy is FirewallPolicyBase {
         nonces[txOrigin] = nonce + 1;
     }
 
+    /**
+     * @dev Allows a signer to approve a call.
+     * @param _callHashes The call hashes to approve.
+     * @param expiration The expiration time of these approved calls
+     * @param txOrigin The transaction origin of the approved hashes.
+     */
     function approveCalls(
         bytes32[] calldata _callHashes,
         uint256 expiration,
@@ -85,6 +104,16 @@ contract ApprovedCallsPolicy is FirewallPolicyBase {
         approvedCallsExpiration[txOrigin] = expiration;
     }
 
+    /**
+     * @dev Internal helper function to get the hash of a call.
+     *
+     * @param consumer The address of the contract that is being called.
+     * @param sender The address of the account that is calling the contract.
+     * @param origin The address of the account that originated the call.
+     * @param data The data that is being sent to the contract.
+     * @param value The amount of value that is being sent to the contract.
+     * @return The hash of the call.
+     */
     function getCallHash(
         address consumer,
         address sender,
@@ -95,6 +124,10 @@ contract ApprovedCallsPolicy is FirewallPolicyBase {
         return keccak256(abi.encodePacked(consumer, sender, origin, data, value));
     }
 
+    /**
+     * @dev Internal helper function to get a signed hash of a message that has been signed with the Ethereum prefix.
+     * @param _messageHash The hash of the message.
+     */
     function getEthSignedMessageHash(
         bytes32 _messageHash
     ) public pure returns (bytes32) {
@@ -108,6 +141,12 @@ contract ApprovedCallsPolicy is FirewallPolicyBase {
             );
     }
 
+    /**
+     * @dev Internal helper function to recover the signer of a message.
+     * @param _ethSignedMessageHash The hash of the message that was signed.
+     * @param _signature The signature of the message.
+     * @return The address of the signer.
+     */
     function recoverSigner(
         bytes32 _ethSignedMessageHash,
         bytes memory _signature
@@ -117,6 +156,13 @@ contract ApprovedCallsPolicy is FirewallPolicyBase {
         return ecrecover(_ethSignedMessageHash, v, r, s);
     }
 
+    /**
+     * @dev Internal helper function to split a signature into its r, s, and v components.
+     * @param sig The signature to split.
+     * @return r The r component of the signature.
+     * @return s The s component of the signature.
+     * @return v The v component of the signature.
+     */
     function splitSignature(
         bytes memory sig
     ) public pure returns (bytes32 r, bytes32 s, uint8 v) {
@@ -143,6 +189,10 @@ contract ApprovedCallsPolicy is FirewallPolicyBase {
         // implicitly return (r, s, v)
     }
 
+    /**
+     * @dev This function is called to set the expiration time for approved call hashes.
+     * @return is_executing_simulation The expiration time for approved call hashes.
+     */
     function _is_executing_simulation() private view returns (bool is_executing_simulation) {
         bytes32 is_executing_simulation_slot = IS_EXECUTING_SIMULATION_SLOT;
         assembly {

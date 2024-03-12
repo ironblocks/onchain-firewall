@@ -14,17 +14,30 @@ import "./FirewallPolicyBase.sol";
  */
 contract NonReentrantPolicy is FirewallPolicyBase {
 
+    // consumer => bool
     mapping (address => bool) public hasEnteredConsumer;
 
     constructor(address _firewallAddress) FirewallPolicyBase() {
         authorizedExecutors[_firewallAddress] = true;
     }
 
+    /**
+     * @dev This function is called before the execution of a transaction.
+     * It checks that the consumer is not currently executing a transaction.
+     *
+     * @param consumer The address of the contract that is being called.
+     */
     function preExecution(address consumer, address, bytes calldata, uint) external isAuthorized(consumer) {
         require(!hasEnteredConsumer[consumer], "NO REENTRANCY");
         hasEnteredConsumer[consumer] = true;
     }
 
+    /**
+     * @dev This function is called after the execution of a transaction.
+     * It sets the consumer as not currently executing a transaction.
+     *
+     * @param consumer The address of the contract that is being called.
+     */
     function postExecution(address consumer, address, bytes calldata, uint) external isAuthorized(consumer) {
         hasEnteredConsumer[consumer] = false;
     }

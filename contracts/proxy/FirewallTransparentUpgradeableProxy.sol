@@ -13,13 +13,16 @@ import "../interfaces/IFirewallConsumer.sol";
  * @author David Benchimol @ Ironblocks
  * @dev This contract acts the same as OpenZeppelins `TransparentUpgradeableProxy` contract,
  * but with Ironblocks firewall built in to the proxy layer.
- * 
+ *
  */
 contract FirewallTransparentUpgradeableProxy is TransparentUpgradeableProxy, IFirewallConsumer {
 
     bytes32 private constant FIREWALL_STORAGE_SLOT = bytes32(uint256(keccak256("eip1967.firewall")) - 1);
     bytes32 private constant FIREWALL_ADMIN_STORAGE_SLOT = bytes32(uint256(keccak256("eip1967.firewall.admin")) - 1);
 
+    /**
+     * @dev Emitted when a static call is detected.
+     */
     event StaticCallCheck();
 
     /**
@@ -72,7 +75,7 @@ contract FirewallTransparentUpgradeableProxy is TransparentUpgradeableProxy, IFi
             value := callvalue()
         }
         IFirewall(_firewall).preExecution(msg.sender, msg.data, value);
-        _; 
+        _;
         IFirewall(_firewall).postExecution(msg.sender, msg.data, value);
     }
 
@@ -90,6 +93,7 @@ contract FirewallTransparentUpgradeableProxy is TransparentUpgradeableProxy, IFi
 
     /**
      * @dev Admin only function allowing the consumers admin to remove a policy from the consumers subscribed policies.
+     * @param _firewall The new firewall address.
      */
     function changeFirewall(address _firewall) external ifAdmin {
         require(_firewall != address(0), "FirewallConsumer: zero address");
@@ -98,6 +102,7 @@ contract FirewallTransparentUpgradeableProxy is TransparentUpgradeableProxy, IFi
 
     /**
      * @dev Admin only function allowing the consumers admin to remove a policy from the consumers subscribed policies.
+     * @param _firewallAdmin The new firewall admin address.
      */
     function changeFirewallAdmin(address _firewallAdmin) external ifAdmin {
         require(_firewallAdmin != address(0), "FirewallConsumer: zero address");
@@ -158,6 +163,13 @@ contract FirewallTransparentUpgradeableProxy is TransparentUpgradeableProxy, IFi
         StorageSlot.getAddressSlot(FIREWALL_STORAGE_SLOT).value = _firewall;
     }
 
+    /**
+     * @dev We can't call `TransparentUpgradeableProxy._delegate` because it uses an inline `RETURN`
+     *      Since we have checks after the implementation call we need to save the return data,
+     *      perform the checks, and only then return the data
+     *
+     * @param _toimplementation The address of the implementation to delegate the call to
+     */
     function _internalDelegate(address _toimplementation) private firewallProtected returns (bytes memory) {
         bytes memory ret_data = Address.functionDelegateCall(_toimplementation, msg.data);
         return ret_data;

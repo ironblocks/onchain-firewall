@@ -11,16 +11,38 @@ import "./FirewallPolicyBase.sol";
  */
 contract AllowlistPolicy is FirewallPolicyBase {
 
+    /**
+     * @dev A mapping of consumer addresses to a mapping of sender addresses to a boolean value.
+     * The boolean value is true if the sender is allowed to call the consumer, and false if they are not.
+     */
     mapping (address => mapping (address => bool)) public consumerAllowlist;
 
+    /**
+     * @dev This function is called before the execution of a transaction.
+     * It checks if the sender is allowed to call the consumer.
+     *
+     * @param consumer The address of the contract that is being called.
+     * @param sender The address of the account that is calling the contract.
+     */
     function preExecution(address consumer, address sender, bytes calldata, uint) external view override {
         require(consumerAllowlist[consumer][sender], "AllowlistPolicy: Sender not allowed");
     }
 
+    /**
+     * @dev This function is called after the execution of a transaction.
+     * It does nothing in this policy.
+     */
     function postExecution(address, address, bytes calldata, uint) external override {
         // Do nothing
     }
 
+    /**
+     * @dev This function is called to set the allowlist for a consumer.
+     *
+     * @param consumer The address of the consumer contract.
+     * @param accounts The addresses to set the allowlist for.
+     * @param status The status to set the allowlist to.
+     */
     function setConsumerAllowlist(address consumer, address[] calldata accounts, bool status) external onlyRole(POLICY_ADMIN_ROLE) {
         for (uint i = 0; i < accounts.length; i++) {
             consumerAllowlist[consumer][accounts[i]] = status;

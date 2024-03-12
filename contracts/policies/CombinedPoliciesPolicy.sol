@@ -17,7 +17,10 @@ import "./FirewallPolicyBase.sol";
 contract CombinedPoliciesPolicy is FirewallPolicyBase {
 
     bytes32[] public allowedCombinationHashes;
+
+    // combination hash => bool
     mapping (bytes32 => bool) public isAllowedCombination;
+
     address[] public policies;
     bool[][] public currentResults;
 
@@ -25,6 +28,15 @@ contract CombinedPoliciesPolicy is FirewallPolicyBase {
         authorizedExecutors[_firewallAddress] = true;
     }
 
+    /**
+     * @dev This function is called before the execution of a transaction.
+     * It calls the preExecution function of all the policies and stores the results.
+     *
+     * @param consumer The address of the contract that is being called.
+     * @param sender The address of the contract that is calling the consumer.
+     * @param data The data of the transaction.
+     * @param value The value of the transaction.
+     */
     function preExecution(address consumer, address sender, bytes calldata data, uint value) external isAuthorized(consumer) {
         bool[] memory currentResult = new bool[](policies.length);
         for (uint i = 0; i < policies.length; i++) {
@@ -38,6 +50,15 @@ contract CombinedPoliciesPolicy is FirewallPolicyBase {
         currentResults.push(currentResult);
     }
 
+    /**
+     * @dev This function is called after the execution of a transaction.
+     * It calls the postExecution function of all the policies and checks the results against the allowed combinations.
+     *
+     * @param consumer The address of the contract that is being called.
+     * @param sender The address of the contract that is calling the consumer.
+     * @param data The data of the transaction.
+     * @param value The value of the transaction.
+     */
     function postExecution(address consumer, address sender, bytes calldata data, uint value) external isAuthorized(consumer) {
         bool[] memory currentResult = currentResults[currentResults.length - 1];
         currentResults.pop();
@@ -53,6 +74,12 @@ contract CombinedPoliciesPolicy is FirewallPolicyBase {
         require(isAllowedCombination[combinationHash], "CombinedPoliciesPolicy: Disallowed combination");
     }
 
+    /**
+     * @dev This function is called to set the allowed combinations of policies.
+     *
+     * @param _policies The policies to combine.
+     * @param _allowedCombinations The allowed combinations of the policies.
+     */
     function setAllowedCombinations(address[] calldata _policies, bool[][] calldata _allowedCombinations) external onlyRole(POLICY_ADMIN_ROLE) {
         // Reset all combinations to false
         for (uint i = 0; i < allowedCombinationHashes.length; i++) {
