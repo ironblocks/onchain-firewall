@@ -20,7 +20,7 @@ import "../interfaces/IFirewallConsumer.sol";
  * 1) The Upgraded(address indexed implementation) event will be emitted when a FirewallAdmin makes
  * changes to the Firewall's settings (i.e. even though the implementation/logic contract was not changed).
  *
- * 2) Upgrading the implementation contract and initizliaing it are now separated into two separate calls.
+ * 2) Upgrading the implementation contract and initializing it are now separated into two separate calls.
  *
  * If any of these are a limitation for your use case, or you if you have any questions on how or when to use this
  * contract - please refer to the Firewall's documentation and/or contact our support.
