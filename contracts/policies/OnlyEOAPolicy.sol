@@ -11,6 +11,13 @@ import "./FirewallPolicyBase.sol";
  * Note that we have an `allowedContracts` mapping, in case another approved contract needs
  * to be able to call this method.
  *
+ * IMPORTANT: This protection provided by this policy depends on the value of `tx.origin`.
+ * While this is by design, it also means that account abstraction is not supported
+ * by this policy.
+ *
+ * If you have any questions and / or need additional support regrading this policy,
+ * please contact our support.
+ *
  */
 contract OnlyEOAPolicy is FirewallPolicyBase {
 
