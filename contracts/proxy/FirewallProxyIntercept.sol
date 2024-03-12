@@ -13,7 +13,16 @@ import "../interfaces/IFirewallConsumer.sol";
  * @author David Benchimol @ Ironblocks
  * @dev This contract acts the same as OpenZeppelins `TransparentUpgradeableProxy` contract,
  * but with Ironblocks firewall built in to the proxy layer.
- * 
+ *
+ * NOTE: Most block explorers (like Etherscan) expect to find the address of the implementation contract
+ * under the storage slot of "eip1967,proxy.implementation". Since this contract doesn't include this
+ * storage slot, block explorers will not be able to find the implementation contract address, limiting
+ * their ability to display a UI for interacting with the implementation contract while viewing
+ * the proxy contract. This is a known tradeoff of using this contract.
+ *
+ * You can still use block explorers to opening the implementation contract
+ * directly in the block explorer, and interact with it there.
+ *
  */
 contract FirewallProxyIntercept is TransparentUpgradeableProxy, IFirewallConsumer {
 
@@ -77,7 +86,7 @@ contract FirewallProxyIntercept is TransparentUpgradeableProxy, IFirewallConsume
             value := callvalue()
         }
         IFirewall(_firewall).preExecution(msg.sender, msg.data, value);
-        _; 
+        _;
         IFirewall(_firewall).postExecution(msg.sender, msg.data, value);
     }
 
