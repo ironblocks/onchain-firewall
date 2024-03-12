@@ -11,6 +11,13 @@ import "./FirewallPolicyBase.sol";
  * This works by approving the ordered sequence of calls that must be made, and then asserting at each step
  * that the next call is as expected. Note that this doesn't assert that the entire sequence is executed.
  *
+ * NOTE: Misconfiguration of the approved calls may result in legitimate transactions being reverted.
+ * For example, transactions that also include internal calls must include the internal calls in the approved calls
+ * hash in order for the policy to work as expected.
+ *
+ * If you have any questions on how or when to use this modifier, please refer to the Firewall's documentation
+ * and/or contact our support.
+ *
  */
 contract ApprovedCallsPolicy is FirewallPolicyBase {
     bytes32 public constant SIGNER_ROLE = keccak256("SIGNER_ROLE");
