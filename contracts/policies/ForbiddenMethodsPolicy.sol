@@ -19,8 +19,8 @@ import "./FirewallPolicyBase.sol";
  */
 contract ForbiddenMethodsPolicy is FirewallPolicyBase {
 
-    mapping (address => mapping (bytes4 => bool)) public consumerMethodStatus;
-    mapping (bytes32 => bool) public hasEnteredForbiddenMethod;
+    mapping (address consumer => mapping (bytes4 sighash => bool isForbidden)) public consumerMethodStatus;
+    mapping (bytes32 currentContextHash => bool hasEntered) public hasEnteredForbiddenMethod;
 
     function preExecution(address consumer, address, bytes calldata data, uint) external override {
         bytes32 currentContext = keccak256(abi.encodePacked(tx.origin, block.number, tx.gasprice));

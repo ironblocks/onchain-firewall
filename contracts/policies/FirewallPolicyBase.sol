@@ -9,8 +9,8 @@ import "../interfaces/IFirewallPolicy.sol";
 abstract contract FirewallPolicyBase is IFirewallPolicy, AccessControl {
     bytes32 public constant POLICY_ADMIN_ROLE = keccak256("POLICY_ADMIN_ROLE");
 
-    mapping (address => bool) public authorizedExecutors;
-    mapping (address => bool) public approvedConsumer;
+    mapping (address executor => bool authorized) public authorizedExecutors;
+    mapping (address consumer => bool approved) public approvedConsumer;
 
     modifier isAuthorized(address consumer) {
         require(authorizedExecutors[msg.sender], "FirewallPolicy: Only authorized executor");

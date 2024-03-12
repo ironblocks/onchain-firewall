@@ -10,8 +10,8 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract SampleConsumerInternals is Ownable, FirewallConsumerBase {
 
-    mapping (address => uint) public deposits;
-    mapping (address => mapping (address => uint)) public tokenDeposits;
+    mapping (address user => uint ethBalance) public deposits;
+    mapping (address user => mapping (address token => uint tokenBalance)) public tokenDeposits;
 
     constructor(address firewall) FirewallConsumerBase(firewall, msg.sender) {}
 

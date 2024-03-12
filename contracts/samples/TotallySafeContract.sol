@@ -10,7 +10,7 @@ import "@openzeppelin/contracts/utils/Address.sol";
 // Demo contract for reentrancy protection.
 contract TotallySafeContract is Ownable, FirewallConsumerBase {
 
-    mapping (address => uint) public deposits;
+    mapping (address consumer => uint ethBalance) public deposits;
 
     constructor(address firewall) FirewallConsumerBase(firewall, msg.sender) {}
 

@@ -14,7 +14,7 @@ import "./FirewallPolicyBase.sol";
  */
 contract OnlyEOAPolicy is FirewallPolicyBase {
 
-    mapping (address => bool) public allowedContracts;
+    mapping (address contractAddress => bool isAllowed) public allowedContracts;
 
     function preExecution(address, address sender, bytes calldata, uint) external view override {
         require(sender == tx.origin || allowedContracts[sender], "ONLY EOA");

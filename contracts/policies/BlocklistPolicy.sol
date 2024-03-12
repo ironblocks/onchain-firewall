@@ -11,7 +11,7 @@ import "./FirewallPolicyBase.sol";
  */
 contract BlocklistPolicy is FirewallPolicyBase {
 
-    mapping (address => mapping (address => bool)) public consumerBlocklist;
+    mapping (address consumer => mapping (address caller => bool isCallerBlocked)) public consumerBlocklist;
 
     function preExecution(address consumer, address sender, bytes calldata, uint) external view override {
         require(!consumerBlocklist[consumer][sender], "BlocklistPolicy: Sender not allowed");

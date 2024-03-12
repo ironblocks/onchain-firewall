@@ -19,11 +19,11 @@ contract ApprovedCallsPolicy is FirewallPolicyBase {
     bytes32 private constant IS_EXECUTING_SIMULATION_SLOT = keccak256("IS_EXECUTING_SIMULATION"); // 0x5240afa92511149d1ea75355dd533487007d2505fa7bfdceab11878262a081b6
 
     // tx.origin => callHashes
-    mapping (address => bytes32[]) public approvedCalls;
+    mapping (address txOrigin => bytes32[] approvedCallHashes) public approvedCalls;
     // tx.origin => time of approved calls
-    mapping (address => uint256) public approvedCallsExpiration;
+    mapping (address txOrigin => uint256 expiration) public approvedCallsExpiration;
     // tx.origin => nonce
-    mapping (address => uint256) public nonces;
+    mapping (address txOrigin => uint256 nonce) public nonces;
 
     constructor(address _firewallAddress) FirewallPolicyBase() {
         authorizedExecutors[_firewallAddress] = true;

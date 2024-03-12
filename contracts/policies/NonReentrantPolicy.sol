@@ -14,7 +14,7 @@ import "./FirewallPolicyBase.sol";
  */
 contract NonReentrantPolicy is FirewallPolicyBase {
 
-    mapping (address => bool) public hasEnteredConsumer;
+    mapping (address consumer => bool hasEntered) public hasEnteredConsumer;
 
     constructor(address _firewallAddress) FirewallPolicyBase() {
         authorizedExecutors[_firewallAddress] = true;

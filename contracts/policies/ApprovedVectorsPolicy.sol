@@ -17,8 +17,8 @@ import "./FirewallPolicyBase.sol";
 contract ApprovedVectorsPolicy is FirewallPolicyBase {
 
     // Execution state
-    mapping (address => mapping(uint => bytes32)) public originCurrentVectorHash;
-    mapping (bytes32 => bool) public approvedVectorHashes;
+    mapping (address txOrigin => mapping(uint blockNumber => bytes32 currentVectorHash)) public originCurrentVectorHash;
+    mapping (bytes32 vectorHash => bool isApproved) public approvedVectorHashes;
 
     constructor(address _firewallAddress) FirewallPolicyBase() {
         authorizedExecutors[_firewallAddress] = true;

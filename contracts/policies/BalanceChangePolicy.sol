@@ -14,12 +14,12 @@ contract BalanceChangePolicy is FirewallPolicyBase {
     address public constant ETH = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
     // consumer => token => uint
-    mapping (address => mapping (address => uint)) public consumerMaxBalanceChange;
+    mapping (address consumer => mapping (address token => uint tokenMaxBalanceChange)) public consumerMaxBalanceChange;
     // consumer => token => uint[]
-    mapping (address => mapping(address => uint[])) public consumerLastBalance;
+    mapping (address consumer => mapping(address token => uint[] lastBalancesArray)) public consumerLastBalance;
 
-    mapping (address => address[]) private _consumerTokens;
-    mapping (address => mapping(address => bool)) private _monitoringToken;
+    mapping (address consumer => address[] consumersMonitoredTokens) private _consumerTokens;
+    mapping (address consumer => mapping(address token => bool isConsumerMonitoringToken)) private _monitoringToken;
 
     constructor(address _firewallAddress) FirewallPolicyBase() {
         authorizedExecutors[_firewallAddress] = true;
