@@ -10,7 +10,7 @@ import "./interfaces/IFirewallConsumer.sol";
 
 /**
  * @title Firewall Consumer Base Contract
- * @author David Benchimol @ Ironblocks 
+ * @author David Benchimol @ Ironblocks
  * @dev This contract is a parent contract that can be used to add firewall protection to any contract.
  *
  * The contract must define a firewall contract which will manage the policies that are applied to the contract.
@@ -38,7 +38,7 @@ contract FirewallConsumerBase is IFirewallConsumer, Context {
         }
         uint value = _msgValue();
         IFirewall(firewall).preExecution(msg.sender, msg.data, value);
-        _; 
+        _;
         IFirewall(firewall).postExecution(msg.sender, msg.data, value);
     }
 
@@ -46,6 +46,15 @@ contract FirewallConsumerBase is IFirewallConsumer, Context {
      * @dev modifier that will run the preExecution and postExecution hooks of the firewall, applying each of
      * the subscribed policies. Allows passing custom data to the firewall, not necessarily msg.data.
      * Useful for checking internal function calls
+     *
+     * NOTE: Using this modifier affects the data that is passed to the firewall, and as such it is mainly meant
+     * to be used by internal functions, and only in conjuction with policies that whose protection strategy
+     * requires this data.
+     *
+     * Using this modifier incorrectly may result in unexpected behavior.
+     *
+     * If you have any questions on how or when to use this modifier, please refer to the Firewall's documentation
+     * and/or contact our support.
      */
     modifier firewallProtectedCustom(bytes memory data) {
         address firewall = _getAddressBySlot(FIREWALL_STORAGE_SLOT);
@@ -55,13 +64,22 @@ contract FirewallConsumerBase is IFirewallConsumer, Context {
         }
         uint value = _msgValue();
         IFirewall(firewall).preExecution(msg.sender, data, value);
-        _; 
+        _;
         IFirewall(firewall).postExecution(msg.sender, data, value);
     }
 
     /**
      * @dev identical to the rest of the modifiers in terms of logic, but makes it more
      * aesthetic when all you want to pass are signatures/unique identifiers.
+     *
+     *
+     * NOTE: Using this modifier affects the data that is passed to the firewall, and as such it is mainly to
+     * be used by policies that whose protection strategy relies on the function's signature hahs.
+     *
+     * Using this modifier incorrectly may result in unexpected behavior.
+     *
+     * If you have any questions on how or when to use this modifier, please refer to the Firewall's documentation
+     * and/or contact our support.
      */
     modifier firewallProtectedSig(bytes4 selector) {
         address firewall = _getAddressBySlot(FIREWALL_STORAGE_SLOT);
@@ -71,7 +89,7 @@ contract FirewallConsumerBase is IFirewallConsumer, Context {
         }
         uint value = _msgValue();
         IFirewall(firewall).preExecution(msg.sender, abi.encodePacked(selector), value);
-        _; 
+        _;
         IFirewall(firewall).postExecution(msg.sender, abi.encodePacked(selector), value);
     }
 
@@ -88,7 +106,7 @@ contract FirewallConsumerBase is IFirewallConsumer, Context {
         uint value = _msgValue();
         bytes32[] memory storageSlots = IFirewall(firewall).preExecutionPrivateInvariants(msg.sender, msg.data, value);
         bytes32[] memory preValues = _readStorage(storageSlots);
-        _; 
+        _;
         bytes32[] memory postValues = _readStorage(storageSlots);
         IFirewall(firewall).postExecutionPrivateInvariants(msg.sender, msg.data, value, preValues, postValues);
     }
@@ -98,7 +116,7 @@ contract FirewallConsumerBase is IFirewallConsumer, Context {
      * @dev modifier asserting that the target is approved
      */
     modifier onlyApprovedTarget(address target) {
-        // We use the same logic that solidity uses for mapping locations, but we add a pseudorandom 
+        // We use the same logic that solidity uses for mapping locations, but we add a pseudorandom
         // constant "salt" instead of a constant placeholder so that there are no storage collisions
         // if adding this to an upgradeable contract implementation
         bytes32 _slot = keccak256(abi.encode(APPROVED_TARGETS_MAPPING_SLOT, target));
@@ -128,7 +146,7 @@ contract FirewallConsumerBase is IFirewallConsumer, Context {
 
     /**
      * @dev Allows calling an approved external target before executing a method.
-     * 
+     *
      * This can be used for multiple purposes, but the initial one is to call `approveCallsViaSignature` before
      * executing a function, allowing synchronous transaction approvals.
      */
