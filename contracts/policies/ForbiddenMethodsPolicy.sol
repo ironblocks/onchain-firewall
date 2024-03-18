@@ -16,6 +16,16 @@ import "./FirewallPolicyBase.sol";
  * meant to be used in conjunction with the `CombinedPoliciesPolicy`, allowing the consumer to create a policy
  * which will only require certain policies to pass once you hit a defined "forbidden" method.
  *
+ * IMPORTANT: This function relies on the "tx.origin", "block.number", and "tx.gasprice" for determining
+ * the current execution context - which in some cases may not be unique - and therefore comes with the following
+ * known limitations:
+ *
+ *   1. Account Abstraction is not supported (EIP-4337)
+ *   2. Transactions with similar gas-price in the same block may not be unique, causing false-positives
+ *
+ * If you have any questions and / or need additional support regrading this policy,
+ * please contact our support.
+ *
  */
 contract ForbiddenMethodsPolicy is FirewallPolicyBase {
 
