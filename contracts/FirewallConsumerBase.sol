@@ -41,9 +41,9 @@ contract FirewallConsumerBase is IFirewallConsumer, Context {
             return;
         }
         uint value = _msgValue();
-        IFirewall(firewall).preExecution(msg.sender, msg.data, value);
-        _;
-        IFirewall(firewall).postExecution(msg.sender, msg.data, value);
+        IFirewall(firewall).preExecution(_msgSender(), _msgData(), value);
+        _; 
+        IFirewall(firewall).postExecution(_msgSender(), _msgData(), value);
     }
 
     /**
@@ -62,9 +62,9 @@ contract FirewallConsumerBase is IFirewallConsumer, Context {
             return;
         }
         uint value = _msgValue();
-        IFirewall(firewall).preExecution(msg.sender, data, value);
-        _;
-        IFirewall(firewall).postExecution(msg.sender, data, value);
+        IFirewall(firewall).preExecution(_msgSender(), data, value);
+        _; 
+        IFirewall(firewall).postExecution(_msgSender(), data, value);
     }
 
     /**
@@ -82,9 +82,9 @@ contract FirewallConsumerBase is IFirewallConsumer, Context {
             return;
         }
         uint value = _msgValue();
-        IFirewall(firewall).preExecution(msg.sender, abi.encodePacked(selector), value);
-        _;
-        IFirewall(firewall).postExecution(msg.sender, abi.encodePacked(selector), value);
+        IFirewall(firewall).preExecution(_msgSender(), abi.encodePacked(selector), value);
+        _; 
+        IFirewall(firewall).postExecution(_msgSender(), abi.encodePacked(selector), value);
     }
 
     /**
@@ -102,11 +102,11 @@ contract FirewallConsumerBase is IFirewallConsumer, Context {
             return;
         }
         uint value = _msgValue();
-        bytes32[] memory storageSlots = IFirewall(firewall).preExecutionPrivateInvariants(msg.sender, msg.data, value);
+        bytes32[] memory storageSlots = IFirewall(firewall).preExecutionPrivateInvariants(_msgSender(), _msgData(), value);
         bytes32[] memory preValues = _readStorage(storageSlots);
         _;
         bytes32[] memory postValues = _readStorage(storageSlots);
-        IFirewall(firewall).postExecutionPrivateInvariants(msg.sender, msg.data, value, preValues, postValues);
+        IFirewall(firewall).postExecutionPrivateInvariants(_msgSender(), _msgData(), value, preValues, postValues);
     }
 
 
