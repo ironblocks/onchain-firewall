@@ -9,6 +9,18 @@ import "../interfaces/IFirewall.sol";
 import "../interfaces/IFirewallConsumer.sol";
 
 /**
+ * @dev Interface for {FirewallProxyIntercept}. In order to implement transparency, {FirewallProxyIntercept}
+ * does not implement this interface directly, and some of its functions are implemented by an internal dispatch
+ * mechanism. The compiler is unaware that these functions are implemented by {FirewallProxyIntercept} and will not
+ * include them in the ABI so this interface must be used to interact with it.
+ */
+interface IFirewallProxyIntercept {
+    function firewallAdmin() external view returns (address);
+    function changeFirewall(address) external;
+    function changeFirewallAdmin(address) external;
+}
+
+/**
  * @title Firewall protected TransparentUpgradeableProxy
  * @author David Benchimol @ Ironblocks
  * @dev This contract acts the same as OpenZeppelins `TransparentUpgradeableProxy` contract,
@@ -26,7 +38,7 @@ import "../interfaces/IFirewallConsumer.sol";
  * contract - please refer to the Firewall's documentation and/or contact our support.
  *
  */
-contract FirewallProxyIntercept is TransparentUpgradeableProxy, IFirewallConsumer {
+contract FirewallProxyIntercept is TransparentUpgradeableProxy {
 
     bytes32 private constant FIREWALL_STORAGE_SLOT = bytes32(uint256(keccak256("eip1967.firewall")) - 1);
     bytes32 private constant FIREWALL_ADMIN_STORAGE_SLOT = bytes32(uint256(keccak256("eip1967.firewall.admin")) - 1);
@@ -58,19 +70,6 @@ contract FirewallProxyIntercept is TransparentUpgradeableProxy, IFirewallConsume
         _changeFirewall(_firewall);
         _changeFirewallAdmin(_firewallAdmin);
         _changeFirewallInterceptImplementation(_logic);
-    }
-
-    /**
-     * @dev If not firewall, fallback
-     */
-    modifier ifFirewallOrAdmin() {
-        address _firewall = _getFirewall();
-        address admin = _getAdmin();
-        if (msg.sender == _firewall || msg.sender == admin) {
-            _;
-        } else {
-            _fallback();
-        }
     }
 
     /**
@@ -108,32 +107,59 @@ contract FirewallProxyIntercept is TransparentUpgradeableProxy, IFirewallConsume
     }
 
     /**
-     * @dev Admin only function allowing the consumers admin to remove a policy from the consumers subscribed policies.
+     * @dev If caller is the admin process the call internally, otherwise if the caller is the firewall,
+     * return the firewall admin, else transparently fallback to the proxy behavior
      */
-    function changeFirewall(address _firewall) external ifAdmin {
-        require(_firewall != address(0), "FirewallConsumer: zero address");
-        _changeFirewall(_firewall);
+    function _fallback() internal virtual override {
+        if (msg.sender == _getAdmin()) {
+            bytes memory ret;
+            bytes4 selector = msg.sig;
+            if (selector == IFirewallProxyIntercept.changeFirewall.selector) {
+                ret = _dispatchChangeFirewall();
+            } else if (selector == IFirewallProxyIntercept.changeFirewallAdmin.selector) {
+                ret = _dispatchChangeFirewallAdmin();
+            } else {
+                super._fallback();
+            }
+            assembly {
+                return(add(ret, 0x20), mload(ret))
+            }
+        } else if (msg.sender == _getFirewall()) {
+            bytes memory ret;
+            bytes4 selector = msg.sig;
+            if (selector == IFirewallProxyIntercept.firewallAdmin.selector) {
+                ret = _dispatchFirewallAdmin();
+            } else {
+                revert("TransparentUpgradeableProxy: firewall cannot fallback to proxy target");
+            }
+            assembly {
+                return(add(ret, 0x20), mload(ret))
+            } 
+        } else {
+            super._fallback();
+        }
     }
 
     /**
-     * @dev Admin only function allowing the consumers admin to remove a policy from the consumers subscribed policies.
+     * @dev Admin only function allowing the consumers admin to change the firewall address
      */
-    function changeFirewallAdmin(address _firewallAdmin) external ifAdmin {
-        require(_firewallAdmin != address(0), "FirewallConsumer: zero address");
-        _changeFirewallAdmin(_firewallAdmin);
+    function _dispatchChangeFirewall() private returns (bytes memory) {
+        _requireZeroMsgValue();
+        address newFirewall = abi.decode(msg.data[4:], (address));
+        require(newFirewall != address(0), "FirewallConsumer: zero address");
+        _changeFirewall(newFirewall);
+        return "";
     }
 
     /**
-     * @dev Returns the current firewall address.
-     *
-     * NOTE: Only the admin can call this function. See {FirewallProxyAdmin-getProxyFirewall}.
-     *
-     * TIP: To get this value clients can read directly from the storage slot shown below (specified by EIP1967) using the
-     * https://eth.wiki/json-rpc/API#eth_getstorageat[`eth_getStorageAt`] RPC call.
-     * `0x5dd2e3b890564a8f99f7f203f226a27a8aa59aee19a4ece5cf5eaa77ab91f661`
+     * @dev Admin only function allowing the consumers admin to set a new admin
      */
-    function firewall() external ifAdmin returns (address) {
-        return _getFirewall();
+    function _dispatchChangeFirewallAdmin() private returns (bytes memory) {
+        _requireZeroMsgValue();
+        address newFirewallAdmin = abi.decode(msg.data[4:], (address));
+        require(newFirewallAdmin != address(0), "FirewallConsumer: zero address");
+        _changeFirewallAdmin(newFirewallAdmin);
+        return "";
     }
 
     /**
@@ -145,8 +171,10 @@ contract FirewallProxyIntercept is TransparentUpgradeableProxy, IFirewallConsume
      * https://eth.wiki/json-rpc/API#eth_getstorageat[`eth_getStorageAt`] RPC call.
      * `0x29982a6ac507a2a707ced6dee5d76285dd49725db977de83d9702c628c974135`
      */
-    function firewallAdmin() external ifFirewallOrAdmin returns (address) {
-        return _getFirewallAdmin();
+    function _dispatchFirewallAdmin() private returns (bytes memory) {
+        _requireZeroMsgValue();
+        address firewallAdmin = _getFirewallAdmin();
+        return abi.encode(firewallAdmin);
     }
 
     /**
@@ -206,5 +234,13 @@ contract FirewallProxyIntercept is TransparentUpgradeableProxy, IFirewallConsume
         assembly {
             return(add(ret_data, 0x20), ret_size)
         }
+    }
+
+    /**
+     * @dev To keep this contract fully transparent, all `ifAdmin` functions must be payable. This helper is here to
+     * emulate some proxy functions being non-payable while still allowing value to pass through.
+     */
+    function _requireZeroMsgValue() private {
+        require(msg.value == 0);
     }
 }
