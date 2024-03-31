@@ -28,6 +28,9 @@ contract FirewallConsumerBase is IFirewallConsumer, Context {
     // This slot is special since it's used for mappings and not a single value
     bytes32 private constant APPROVED_TARGETS_MAPPING_SLOT = bytes32(uint256(keccak256("eip1967.approved.targets")) - 1);
 
+    event FirewallAdminUpdated(address newAdmin);
+    event FirewallUpdated(address newFirewall);
+
     /**
      * @dev modifier that will run the preExecution and postExecution hooks of the firewall, applying each of
      * the subscribed policies.
@@ -204,6 +207,7 @@ contract FirewallConsumerBase is IFirewallConsumer, Context {
      */
     function setFirewall(address _firewall) external onlyFirewallAdmin {
         _setAddressBySlot(FIREWALL_STORAGE_SLOT, _firewall);
+        emit FirewallUpdated(_firewall);
     }
 
     /**
@@ -220,6 +224,7 @@ contract FirewallConsumerBase is IFirewallConsumer, Context {
     function acceptFirewallAdmin() external {
         require(msg.sender == _getAddressBySlot(NEW_FIREWALL_ADMIN_STORAGE_SLOT), "FirewallConsumer: not new admin");
         _setAddressBySlot(FIREWALL_ADMIN_STORAGE_SLOT, msg.sender);
+        emit FirewallAdminUpdated(msg.sender);
     }
 
     function _msgValue() internal view returns (uint value) {
