@@ -9,6 +9,15 @@ import "./FirewallPolicyBase.sol";
 /**
  * @dev This policy asserts that a consumer contracts balance change (for eth or tokens) doesn't
  * exceed a configurable amount for a function call.
+ *
+ * NOTE: This policy works by comparing the balance of the consumer before and after the function call.
+ * Based on your use case and how your Firewall Consumer's functions are implemented, there may still
+ * be a change to a user's balance which may exceed a configured threshold, if the change occurs
+ * internally (i.e. in a scope not managed by this policy) but then returns below the threshold when
+ * execution is given back to the policy.
+ *
+ * If you have any questions on how or when to use this modifier, please refer to the Firewall's documentation
+ * and/or contact our support.
  */
 contract BalanceChangePolicy is FirewallPolicyBase {
     address public constant ETH = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
