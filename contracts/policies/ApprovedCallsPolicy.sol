@@ -3,6 +3,7 @@
 // Copyright (c) Ironblocks 2023
 pragma solidity 0.8.19;
 
+import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "./FirewallPolicyBase.sol";
 
 /**
@@ -67,7 +68,8 @@ contract ApprovedCallsPolicy is FirewallPolicyBase {
         bytes memory signature
     ) external {
         require(nonce == nonces[txOrigin], "ApprovedCallsPolicy: invalid nonce");
-        bytes32 messageHash = keccak256(abi.encodePacked(_callHashes, expiration, txOrigin, nonce, block.chainid));
+        // Note that we add address(this) to the message to prevent replay attacks across policies
+        bytes32 messageHash = keccak256(abi.encodePacked(_callHashes, expiration, txOrigin, nonce, address(this), block.chainid));
         bytes32 ethSignedMessageHash = getEthSignedMessageHash(messageHash);
         address signer = recoverSigner(ethSignedMessageHash, signature);
         require(hasRole(SIGNER_ROLE, signer), "ApprovedCallsPolicy: invalid signer");
@@ -114,7 +116,7 @@ contract ApprovedCallsPolicy is FirewallPolicyBase {
     ) public pure returns (address) {
         (bytes32 r, bytes32 s, uint8 v) = splitSignature(_signature);
 
-        return ecrecover(_ethSignedMessageHash, v, r, s);
+        return ECDSA.recover(_ethSignedMessageHash, v, r, s);
     }
 
     function splitSignature(
