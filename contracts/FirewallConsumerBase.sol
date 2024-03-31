@@ -29,6 +29,10 @@ contract FirewallConsumerBase is IFirewallConsumer, Context {
     /**
      * @dev modifier that will run the preExecution and postExecution hooks of the firewall, applying each of
      * the subscribed policies.
+     *
+     * NOTE: Applying this modifier on functions that exit execution flow by an inline assmebly "return" call will
+     * prevent the postExecution hook from running - breaking the protection provided by the firewall.
+     * If you have any questions, please refer to the Firewall's documentation and/or contact our support.
      */
     modifier firewallProtected() {
         address firewall = _getAddressBySlot(FIREWALL_STORAGE_SLOT);
@@ -37,9 +41,9 @@ contract FirewallConsumerBase is IFirewallConsumer, Context {
             return;
         }
         uint value = _msgValue();
-        IFirewall(firewall).preExecution(msg.sender, msg.data, value);
-        _;
-        IFirewall(firewall).postExecution(msg.sender, msg.data, value);
+        IFirewall(firewall).preExecution(_msgSender(), _msgData(), value);
+        _; 
+        IFirewall(firewall).postExecution(_msgSender(), _msgData(), value);
     }
 
     /**
@@ -55,6 +59,10 @@ contract FirewallConsumerBase is IFirewallConsumer, Context {
      *
      * If you have any questions on how or when to use this modifier, please refer to the Firewall's documentation
      * and/or contact our support.
+     * 
+     * NOTE: Applying this modifier on functions that exit execution flow by an inline assmebly "return" call will
+     * prevent the postExecution hook from running - breaking the protection provided by the firewall.
+     * If you have any questions, please refer to the Firewall's documentation and/or contact our support.
      */
     modifier firewallProtectedCustom(bytes memory data) {
         address firewall = _getAddressBySlot(FIREWALL_STORAGE_SLOT);
@@ -63,9 +71,9 @@ contract FirewallConsumerBase is IFirewallConsumer, Context {
             return;
         }
         uint value = _msgValue();
-        IFirewall(firewall).preExecution(msg.sender, data, value);
-        _;
-        IFirewall(firewall).postExecution(msg.sender, data, value);
+        IFirewall(firewall).preExecution(_msgSender(), data, value);
+        _; 
+        IFirewall(firewall).postExecution(_msgSender(), data, value);
     }
 
     /**
@@ -80,6 +88,10 @@ contract FirewallConsumerBase is IFirewallConsumer, Context {
      *
      * If you have any questions on how or when to use this modifier, please refer to the Firewall's documentation
      * and/or contact our support.
+     * 
+     * NOTE: Applying this modifier on functions that exit execution flow by an inline assmebly "return" call will
+     * prevent the postExecution hook from running - breaking the protection provided by the firewall.
+     * If you have any questions, please refer to the Firewall's documentation and/or contact our support.
      */
     modifier firewallProtectedSig(bytes4 selector) {
         address firewall = _getAddressBySlot(FIREWALL_STORAGE_SLOT);
@@ -88,14 +100,18 @@ contract FirewallConsumerBase is IFirewallConsumer, Context {
             return;
         }
         uint value = _msgValue();
-        IFirewall(firewall).preExecution(msg.sender, abi.encodePacked(selector), value);
-        _;
-        IFirewall(firewall).postExecution(msg.sender, abi.encodePacked(selector), value);
+        IFirewall(firewall).preExecution(_msgSender(), abi.encodePacked(selector), value);
+        _; 
+        IFirewall(firewall).postExecution(_msgSender(), abi.encodePacked(selector), value);
     }
 
     /**
      * @dev modifier that will run the preExecution and postExecution hooks of the firewall invariant policy,
      * applying the subscribed invariant policy
+     *
+     * NOTE: Applying this modifier on functions that exit execution flow by an inline assmebly "return" call will
+     * prevent the postExecution hook from running - breaking the protection provided by the firewall.
+     * If you have any questions, please refer to the Firewall's documentation and/or contact our support.
      */
     modifier invariantProtected() {
         address firewall = _getAddressBySlot(FIREWALL_STORAGE_SLOT);
@@ -104,11 +120,11 @@ contract FirewallConsumerBase is IFirewallConsumer, Context {
             return;
         }
         uint value = _msgValue();
-        bytes32[] memory storageSlots = IFirewall(firewall).preExecutionPrivateInvariants(msg.sender, msg.data, value);
+        bytes32[] memory storageSlots = IFirewall(firewall).preExecutionPrivateInvariants(_msgSender(), _msgData(), value);
         bytes32[] memory preValues = _readStorage(storageSlots);
         _;
         bytes32[] memory postValues = _readStorage(storageSlots);
-        IFirewall(firewall).postExecutionPrivateInvariants(msg.sender, msg.data, value, preValues, postValues);
+        IFirewall(firewall).postExecutionPrivateInvariants(_msgSender(), _msgData(), value, preValues, postValues);
     }
 
 
