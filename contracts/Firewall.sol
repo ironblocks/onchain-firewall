@@ -191,6 +191,15 @@ contract Firewall is IFirewall, Ownable2Step {
 
     /**
      * @dev Admin only function allowing the consumers admin to add a policy to the consumers subscribed policies.
+     *
+     * NOTE: Policies that you register to may become obsolete in the future, there may be a an upgraded
+     * version of the policy in the future, and / or a new vulnerability may be found in a policy at some
+     * future time. For these reason, the Firewall Owner has the ability to disapprove a policy in the future,
+     * preventing consumers from being able to subscribe to it in the future.
+     *
+     * While doesn't block already-subscribed consumers from using the policy, it is highly recommended
+     * to have periodical reviews of the policies you are subscribed to and to make any required changes
+     * accordingly.
      */
     function addGlobalPolicy(address consumer, address policy) external onlyConsumerAdmin(consumer) {
         _addGlobalPolicy(consumer, policy);
@@ -206,6 +215,15 @@ contract Firewall is IFirewall, Ownable2Step {
     /**
      * @dev Admin only function allowing the consumers admin to add a single policy to multiple consumers.
      * Note that the consumer admin needs to be the same for all consumers
+     *
+     * NOTE: Policies that you register to may become obsolete in the future, there may be a an upgraded
+     * version of the policy in the future, and / or a new vulnerability may be found in a policy at some
+     * future time. For these reason, the Firewall Owner has the ability to disapprove a policy in the future,
+     * preventing consumers from being able to subscribe to it in the future.
+     *
+     * While doesn't block already-subscribed consumers from using the policy, it is highly recommended
+     * to have periodical reviews of the policies you are subscribed to and to make any required changes
+     * accordingly.
      */
     function addGlobalPolicyForConsumers(address[] calldata consumers, address policy) external {
         for (uint i = 0; i < consumers.length; i++) {
@@ -227,6 +245,15 @@ contract Firewall is IFirewall, Ownable2Step {
 
     /**
      * @dev Admin only function allowing the consumers admin to add multiple policies to the consumers subscribed policies.
+     *
+     * NOTE: Policies that you register to may become obsolete in the future, there may be a an upgraded
+     * version of the policy in the future, and / or a new vulnerability may be found in a policy at some
+     * future time. For these reason, the Firewall Owner has the ability to disapprove a policy in the future,
+     * preventing consumers from being able to subscribe to it in the future.
+     *
+     * While doesn't block already-subscribed consumers from using the policy, it is highly recommended
+     * to have periodical reviews of the policies you are subscribed to and to make any required changes
+     * accordingly.
      */
     function addPolicies(address consumer, bytes4[] calldata methodSigs, address[] calldata policies) external onlyConsumerAdmin(consumer) {
         for (uint i = 0; i < policies.length; i++) {
@@ -236,6 +263,15 @@ contract Firewall is IFirewall, Ownable2Step {
 
     /**
      * @dev Admin only function allowing the consumers admin to add a policy to the consumers subscribed policies.
+     *
+     * NOTE: Policies that you register to may become obsolete in the future, there may be a an upgraded
+     * version of the policy in the future, and / or a new vulnerability may be found in a policy at some
+     * future time. For these reason, the Firewall Owner has the ability to disapprove a policy in the future,
+     * preventing consumers from being able to subscribe to it in the future.
+     *
+     * While doesn't block already-subscribed consumers from using the policy, it is highly recommended
+     * to have periodical reviews of the policies you are subscribed to and to make any required changes
+     * accordingly.
      */
     function addPolicy(address consumer, bytes4 methodSig, address policy) external onlyConsumerAdmin(consumer) {
         _addPolicy(consumer, methodSig, policy);
