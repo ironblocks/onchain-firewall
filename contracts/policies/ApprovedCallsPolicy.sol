@@ -33,9 +33,6 @@ interface IApprovedCallsPolicy {
 contract ApprovedCallsPolicy is FirewallPolicyBase {
     bytes32 public constant SIGNER_ROLE = keccak256("SIGNER_ROLE");
 
-    // We use this to get the trace as if the tx is approved by overriding the storage slot in the debug trace call
-    bytes32 private constant IS_EXECUTING_SIMULATION_SLOT = keccak256("IS_EXECUTING_SIMULATION"); // 0x5240afa92511149d1ea75355dd533487007d2505fa7bfdceab11878262a081b6
-
     // tx.origin => callHashes
     mapping (address => bytes32[]) public approvedCalls;
     // tx.origin => time of approved calls
@@ -47,15 +44,10 @@ contract ApprovedCallsPolicy is FirewallPolicyBase {
         authorizedExecutors[_firewallAddress] = true;
     }
 
-    modifier notInSimulation() {
-        if (_is_executing_simulation()) return;
-        _;
-    }
-
     /**
      * @dev Before executing a call, check that the call has been approved by a signer.
      */
-    function preExecution(address consumer, address sender, bytes calldata data, uint value) external notInSimulation isAuthorized(consumer) {
+    function preExecution(address consumer, address sender, bytes calldata data, uint value) external isAuthorized(consumer) {
         bytes32[] storage approvedCallHashes = approvedCalls[tx.origin];
         require(approvedCallHashes.length > 0, "ApprovedCallsPolicy: call hashes empty");
         uint expiration = approvedCallsExpiration[tx.origin];
@@ -169,10 +161,4 @@ contract ApprovedCallsPolicy is FirewallPolicyBase {
         // implicitly return (r, s, v)
     }
 
-    function _is_executing_simulation() private view returns (bool is_executing_simulation) {
-        bytes32 is_executing_simulation_slot = IS_EXECUTING_SIMULATION_SLOT;
-        assembly {
-            is_executing_simulation := sload(is_executing_simulation_slot)
-        }
-    }
 }
