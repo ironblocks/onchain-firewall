@@ -8,22 +8,16 @@ import "./FirewallPolicyBase.sol";
 /**
  * @dev This policy only allows EOAs to interact with the consumer.
  *
- * Note that we have an `allowedContracts` mapping, in case another approved contract needs
- * to be able to call this method.
+ * Note that if you want specific contracts to be able to interact with the consumer,
+ * then use the combined policies policy with the allowlist policy
  *
  */
 contract OnlyEOAPolicy is FirewallPolicyBase {
 
-    mapping (address => bool) public allowedContracts;
-
     function preExecution(address, address sender, bytes calldata, uint) external view override {
-        require(sender == tx.origin || allowedContracts[sender], "ONLY EOA");
+        require(sender == tx.origin, "ONLY EOA");
     }
 
     function postExecution(address, address, bytes calldata, uint) external override {}
-
-    function setAllowedContracts(address contractAddress, bool status) external onlyRole(POLICY_ADMIN_ROLE) {
-        allowedContracts[contractAddress] = status;
-    }
 
 }
