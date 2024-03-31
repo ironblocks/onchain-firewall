@@ -26,6 +26,15 @@ interface IFirewallProxyIntercept {
  * @dev This contract acts the same as OpenZeppelins `TransparentUpgradeableProxy` contract,
  * but with Ironblocks firewall built in to the proxy layer.
  *
+ * NOTE: Most block explorers (like Etherscan) expect to find the address of the implementation contract
+ * under the storage slot of "eip1967,proxy.implementation". Since this contract doesn't include this
+ * storage slot, block explorers will not be able to find the implementation contract address, limiting
+ * their ability to display a UI for interacting with the implementation contract while viewing
+ * the proxy contract. This is a known tradeoff of using this contract.
+ *
+ * You can still use block explorers to opening the implementation contract
+ * directly in the block explorer, and interact with it there.
+ * 
  * NOTE: This proxy is intended for specific use cases, and using it comes with some
  * behaviors that are by-design different from the standard TransparentUpgradeableProxy:
  *
