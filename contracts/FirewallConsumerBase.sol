@@ -51,6 +51,15 @@ contract FirewallConsumerBase is IFirewallConsumer, Context {
      * the subscribed policies. Allows passing custom data to the firewall, not necessarily msg.data.
      * Useful for checking internal function calls
      *
+     * NOTE: Using this modifier affects the data that is passed to the firewall, and as such it is mainly meant
+     * to be used by internal functions, and only in conjuction with policies that whose protection strategy
+     * requires this data.
+     *
+     * Using this modifier incorrectly may result in unexpected behavior.
+     *
+     * If you have any questions on how or when to use this modifier, please refer to the Firewall's documentation
+     * and/or contact our support.
+     * 
      * NOTE: Applying this modifier on functions that exit execution flow by an inline assmebly "return" call will
      * prevent the postExecution hook from running - breaking the protection provided by the firewall.
      * If you have any questions, please refer to the Firewall's documentation and/or contact our support.
@@ -71,6 +80,15 @@ contract FirewallConsumerBase is IFirewallConsumer, Context {
      * @dev identical to the rest of the modifiers in terms of logic, but makes it more
      * aesthetic when all you want to pass are signatures/unique identifiers.
      *
+     *
+     * NOTE: Using this modifier affects the data that is passed to the firewall, and as such it is mainly to
+     * be used by policies that whose protection strategy relies on the function's signature hahs.
+     *
+     * Using this modifier incorrectly may result in unexpected behavior.
+     *
+     * If you have any questions on how or when to use this modifier, please refer to the Firewall's documentation
+     * and/or contact our support.
+     * 
      * NOTE: Applying this modifier on functions that exit execution flow by an inline assmebly "return" call will
      * prevent the postExecution hook from running - breaking the protection provided by the firewall.
      * If you have any questions, please refer to the Firewall's documentation and/or contact our support.
