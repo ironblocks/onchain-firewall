@@ -4,28 +4,28 @@
 pragma solidity 0.8.19;
 
 import "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
-import "@openzeppelin/contracts/utils/Address.sol";
-import "./FirewallTransparentUpgradeableProxy.sol";
-import "../interfaces/IFirewall.sol";
-import "../interfaces/IFirewallConsumer.sol";
+import {IFirewallTransparentUpgradeableProxy} from "./FirewallTransparentUpgradeableProxy.sol";
 
 /**
  * @title Firewall Proxy Admin
  * @author David Benchimol @ Ironblocks
  * @dev This contract acts the same as OpenZeppelins `ProxyAdmin` contract,
  * but built to work with Ironblocks FirewallTransparentUpgradeableProxy.
- * 
+ *
  */
 contract FirewallProxyAdmin is ProxyAdmin {
 
     /**
      * @dev Returns the current firewall of `proxy`.
      *
+     * @param proxy The proxy to query.
+     * @return The address of the firewall of `proxy`.
+     *
      * Requirements:
      *
      * - This contract must be the admin of `proxy`.
      */
-    function getProxyFirewall(FirewallTransparentUpgradeableProxy proxy) public view virtual returns (address) {
+    function getProxyFirewall(IFirewallTransparentUpgradeableProxy proxy) public view virtual returns (address) {
         // We need to manually run the static call since the getter cannot be flagged as view
         // bytes4(keccak256("firewall()")) == 0xc22a4a85
         (bool success, bytes memory returndata) = address(proxy).staticcall(hex"c22a4a85");
@@ -36,11 +36,14 @@ contract FirewallProxyAdmin is ProxyAdmin {
     /**
      * @dev Returns the current firewall admin of `proxy`.
      *
+     * @param proxy The proxy to query.
+     * @return The address of the firewall admin of `proxy`.
+     *
      * Requirements:
      *
      * - This contract must be the admin of `proxy`.
      */
-    function getProxyFirewallAdmin(FirewallTransparentUpgradeableProxy proxy) public view virtual returns (address) {
+    function getProxyFirewallAdmin(IFirewallTransparentUpgradeableProxy proxy) public view virtual returns (address) {
         // We need to manually run the static call since the getter cannot be flagged as view
         // bytes4(keccak256("firewallAdmin()")) == 0xf05c8582
         (bool success, bytes memory returndata) = address(proxy).staticcall(hex"f05c8582");
@@ -51,22 +54,28 @@ contract FirewallProxyAdmin is ProxyAdmin {
     /**
      * @dev Changes the firewall of `proxy` to `newFirewall`.
      *
+     * @param proxy The proxy to change the firewall of.
+     * @param newFirewall The address of the new firewall
+     *
      * Requirements:
      *
      * - This contract must be the current admin of `proxy`.
      */
-    function changeFirewall(FirewallTransparentUpgradeableProxy proxy, address newFirewall) public virtual onlyOwner {
+    function changeFirewall(IFirewallTransparentUpgradeableProxy proxy, address newFirewall) public virtual onlyOwner {
         proxy.changeFirewall(newFirewall);
     }
 
     /**
      * @dev Changes the firewall admin of `proxy` to `newFirewallAdmin`.
      *
+     * @param proxy The address of the proxy
+     * @param newFirewallAdmin The address of the new admin of the firewall
+     *
      * Requirements:
      *
      * - This contract must be the current admin of `proxy`.
      */
-    function changeFirewallAdmin(FirewallTransparentUpgradeableProxy proxy, address newFirewallAdmin) public virtual onlyOwner {
+    function changeFirewallAdmin(IFirewallTransparentUpgradeableProxy proxy, address newFirewallAdmin) public virtual onlyOwner {
         proxy.changeFirewallAdmin(newFirewallAdmin);
     }
 
