@@ -8,7 +8,7 @@ const ETH_ADDRESS = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE';
 // and then upgraded to point it's implementation to the FirewallTransparentUpgradeableProxy contract.
 describe('Firewall Consumer Upgradeable Proxy', function () {
     let owner, addr1, addr2, proxyAdmin, firewallAdmin, firewallProxyIntercept;
-    let firewall, sampleConsumer, sampleConsumerIface, firewallProxyInterceptIface, approvedCallsPolicy, balanceChangePolicy;
+    let firewall, sampleConsumer, sampleConsumerIface, firewallProxyInterceptIface, firewallProxyInterceptIfaceExternal, approvedCallsPolicy, balanceChangePolicy;
 
     beforeEach(async function () {
         [owner, addr1, addr2, firewallAdmin] = await ethers.getSigners();
@@ -34,6 +34,10 @@ describe('Firewall Consumer Upgradeable Proxy', function () {
         const sampleConsumerImplementation = await SampleConsumerUpgradeableFactory.deploy();
         sampleConsumerIface = SampleConsumerUpgradeableFactory.interface;
         firewallProxyInterceptIface = FirewallProxyInterceptFactory.interface;
+        firewallProxyInterceptIfaceExternal = (await ethers.getContractAt(
+            'IFirewallProxyIntercept',
+            sampleConsumerImplementation.address
+        )).interface;
         const sampleConsumerProxy = await TransparentUpgradeableProxyFactory.deploy(
             sampleConsumerImplementation.address,
             proxyAdmin.address,
@@ -75,7 +79,7 @@ describe('Firewall Consumer Upgradeable Proxy', function () {
                 .upgradeAndCall(
                     sampleConsumer.address,
                     firewallProxyIntercept.address,
-                    firewallProxyInterceptIface.encodeFunctionData(
+                    firewallProxyInterceptIfaceExternal.encodeFunctionData(
                         'changeFirewall(address)',
                         [addr1.address]
                     )
@@ -90,7 +94,7 @@ describe('Firewall Consumer Upgradeable Proxy', function () {
         await proxyAdmin.upgradeAndCall(
             sampleConsumer.address,
             firewallProxyIntercept.address,
-            firewallProxyInterceptIface.encodeFunctionData(
+            firewallProxyInterceptIfaceExternal.encodeFunctionData(
                 'changeFirewall(address)',
                 [addr1.address]
             )
@@ -109,7 +113,7 @@ describe('Firewall Consumer Upgradeable Proxy', function () {
                 .upgradeAndCall(
                     sampleConsumer.address,
                     firewallProxyIntercept.address,
-                    firewallProxyInterceptIface.encodeFunctionData(
+                    firewallProxyInterceptIfaceExternal.encodeFunctionData(
                         'changeFirewallAdmin(address)',
                         [addr1.address]
                     )
@@ -123,7 +127,7 @@ describe('Firewall Consumer Upgradeable Proxy', function () {
         await proxyAdmin.upgradeAndCall(
             sampleConsumer.address,
             firewallProxyIntercept.address,
-            firewallProxyInterceptIface.encodeFunctionData(
+            firewallProxyInterceptIfaceExternal.encodeFunctionData(
                 'changeFirewallAdmin(address)',
                 [addr1.address]
             )

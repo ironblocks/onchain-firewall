@@ -3,8 +3,8 @@
 // Copyright (c) Ironblocks 2023
 pragma solidity 0.8.19;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "../interfaces/IFirewallPrivateInvariantsPolicy.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {IFirewallPrivateInvariantsPolicy} from "../interfaces/IFirewallPrivateInvariantsPolicy.sol";
 
 contract SamplePrivateInvariantsPolicy is IFirewallPrivateInvariantsPolicy, Ownable {
 

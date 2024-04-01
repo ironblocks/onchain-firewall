@@ -3,10 +3,7 @@
 // Copyright (c) Ironblocks 2023
 pragma solidity 0.8.19;
 
-import "../FirewallConsumerBase.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/utils/Address.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {FirewallConsumerBase} from "../FirewallConsumerBase.sol";
 
 contract SampleInvariantConsumer is FirewallConsumerBase {
 
