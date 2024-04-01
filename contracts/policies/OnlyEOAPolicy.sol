@@ -11,6 +11,13 @@ import "./FirewallPolicyBase.sol";
  * Note that if you want specific contracts to be able to interact with the consumer,
  * then use the combined policies policy with the allowlist policy
  *
+ * IMPORTANT: This protection provided by this policy depends on the value of `tx.origin`.
+ * While this is by design, it also means that account abstraction is not supported
+ * by this policy.
+ *
+ * If you have any questions and / or need additional support regrading this policy,
+ * please contact our support.
+ *
  */
 contract OnlyEOAPolicy is FirewallPolicyBase {
 
