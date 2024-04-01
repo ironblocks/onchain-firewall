@@ -26,7 +26,7 @@ interface IFirewallTransparentUpgradeableProxy {
  * @author David Benchimol @ Ironblocks
  * @dev This contract acts the same as OpenZeppelins `TransparentUpgradeableProxy` contract,
  * but with Ironblocks firewall built in to the proxy layer.
- * 
+ *
  */
 contract FirewallTransparentUpgradeableProxy is TransparentUpgradeableProxy {
 
@@ -59,6 +59,9 @@ contract FirewallTransparentUpgradeableProxy is TransparentUpgradeableProxy {
     /**
      * @dev modifier that will run the preExecution and postExecution hooks of the firewall, applying each of
      * the subscribed policies.
+     *
+     * NOTE: See the note comment above `_isStaticCall` regarding limitations of detecting
+     * view functions through low-level calls.
      */
     modifier firewallProtected() {
         address _firewall = _getFirewall();
@@ -74,7 +77,7 @@ contract FirewallTransparentUpgradeableProxy is TransparentUpgradeableProxy {
             value := callvalue()
         }
         IFirewall(_firewall).preExecution(msg.sender, msg.data, value);
-        _; 
+        _;
         IFirewall(_firewall).postExecution(msg.sender, msg.data, value);
     }
 
@@ -82,6 +85,17 @@ contract FirewallTransparentUpgradeableProxy is TransparentUpgradeableProxy {
         emit StaticCallCheck();
     }
 
+    /**
+     * @dev NOTE: The `_isStaticCall` function is designed to distinguish between view (pure/constant) calls
+     * and non-view calls to optimize interaction with the firewall. It relies on the `staticCallCheck` function,
+     * expecting it to revert on static calls. However, this mechanism can be circumvented by using low-level call
+     * operations to invoke view functions, which would not trigger the expected revert and thus not be recognized
+     * by `_isStaticCall`. This means the `firewallProtected` modifier, which relies on `_isStaticCall`, may
+     * inadvertently apply firewall checks to some view calls if they're invoked via low-level calls.
+     *
+     * Integrators should be aware of this limitation and consider it when designing their interactions with
+     * this contract to avoid unexpected behavior.
+     */
     function _isStaticCall() private returns (bool) {
         try this.staticCallCheck() {
             return false;
