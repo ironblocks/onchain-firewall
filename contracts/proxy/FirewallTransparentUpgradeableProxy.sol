@@ -3,9 +3,10 @@
 // Copyright (c) Ironblocks 2023
 pragma solidity 0.8.19;
 
-import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
-import "@openzeppelin/contracts/utils/Address.sol";
-import "../interfaces/IFirewall.sol";
+import {TransparentUpgradeableProxy, StorageSlot} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+import {Address} from "@openzeppelin/contracts/utils/Address.sol";
+import {IFirewall} from "../interfaces/IFirewall.sol";
+import {IFirewallConsumer} from "../interfaces/IFirewallConsumer.sol";
 
 /**
  * @dev Interface for {FirewallTransparentUpgradeableProxy}. In order to implement transparency, {FirewallTransparentUpgradeableProxy}

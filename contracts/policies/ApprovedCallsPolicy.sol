@@ -4,7 +4,7 @@
 pragma solidity 0.8.19;
 
 import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
-import "./FirewallPolicyBase.sol";
+import {FirewallPolicyBase} from "./FirewallPolicyBase.sol";
 
 interface IApprovedCallsPolicy {
     function approveCallsViaSignature(

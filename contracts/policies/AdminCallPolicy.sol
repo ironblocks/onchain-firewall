@@ -3,7 +3,7 @@
 // Copyright (c) Ironblocks 2023
 pragma solidity 0.8.19;
 
-import "./FirewallPolicyBase.sol";
+import {FirewallPolicyBase} from "./FirewallPolicyBase.sol";
 
 /**
  * @dev This contract is a policy which requires a third party to approve any admin calls.

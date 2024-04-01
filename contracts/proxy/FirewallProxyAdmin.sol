@@ -3,7 +3,10 @@
 // Copyright (c) Ironblocks 2023
 pragma solidity 0.8.19;
 
-import "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
+import {ProxyAdmin} from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
+import {Address} from "@openzeppelin/contracts/utils/Address.sol";
+import {IFirewall} from "../interfaces/IFirewall.sol";
+import {IFirewallConsumer} from "../interfaces/IFirewallConsumer.sol";
 import {IFirewallTransparentUpgradeableProxy} from "./FirewallTransparentUpgradeableProxy.sol";
 
 /**

@@ -3,7 +3,7 @@
 // Copyright (c) Ironblocks 2023
 pragma solidity 0.8.19;
 
-import "./FirewallPolicyBase.sol";
+import {FirewallPolicyBase} from "./FirewallPolicyBase.sol";
 
 /**
  * @dev This policy only allows addresses on an allowlist to call the protected method

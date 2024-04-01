@@ -3,8 +3,8 @@
 // Copyright (c) Ironblocks 2023
 pragma solidity 0.8.19;
 
-import "@openzeppelin/contracts/access/AccessControl.sol";
-import "../interfaces/IFirewallPolicy.sol";
+import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
+import {IFirewallPolicy} from "../interfaces/IFirewallPolicy.sol";
 
 abstract contract FirewallPolicyBase is IFirewallPolicy, AccessControl {
     bytes32 public constant POLICY_ADMIN_ROLE = keccak256("POLICY_ADMIN_ROLE");

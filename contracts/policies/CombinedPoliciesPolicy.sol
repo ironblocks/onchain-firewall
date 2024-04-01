@@ -3,7 +3,7 @@
 // Copyright (c) Ironblocks 2023
 pragma solidity 0.8.19;
 
-import "./FirewallPolicyBase.sol";
+import {FirewallPolicyBase, IFirewallPolicy} from "./FirewallPolicyBase.sol";
 
 /**
  * @dev This policy allows the combining of multiple other policies
