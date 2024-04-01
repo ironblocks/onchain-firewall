@@ -43,7 +43,7 @@ contract CombinedPoliciesPolicy is FirewallPolicyBase {
             IFirewallPolicy policy = IFirewallPolicy(policies[i]);
             try policy.preExecution(consumer, sender, data, value) {
                 currentResult[i] = true;
-            } catch Error(string memory) {
+            } catch {
                 // Do nothing
             }
         }
@@ -66,7 +66,7 @@ contract CombinedPoliciesPolicy is FirewallPolicyBase {
             IFirewallPolicy policy = IFirewallPolicy(policies[i]);
             try policy.postExecution(consumer, sender, data, value) {
                 // Do nothing
-            } catch Error(string memory) {
+            } catch {
                 currentResult[i] = false;
             }
         }
@@ -88,6 +88,7 @@ contract CombinedPoliciesPolicy is FirewallPolicyBase {
         allowedCombinationHashes = new bytes32[](_allowedCombinations.length);
         // Set all new combinations to true
         for (uint i = 0; i < _allowedCombinations.length; i++) {
+            require(_policies.length == _allowedCombinations[i].length, "CombinedPoliciesPolicy: Invalid combination length");
             isAllowedCombination[keccak256(abi.encodePacked(_allowedCombinations[i]))] = true;
             allowedCombinationHashes[i] = (keccak256(abi.encodePacked(_allowedCombinations[i])));
         }

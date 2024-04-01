@@ -3,7 +3,18 @@
 // Copyright (c) Ironblocks 2023
 pragma solidity 0.8.19;
 
+import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "./FirewallPolicyBase.sol";
+
+interface IApprovedCallsPolicy {
+    function approveCallsViaSignature(
+        bytes32[] calldata _callHashes,
+        uint256 expiration,
+        address txOrigin,
+        uint nonce,
+        bytes memory signature
+    ) external;
+}
 
 /**
  * @dev This policy requires a transaction to a consumer to be signed and approved on chain before execution.
@@ -11,13 +22,17 @@ import "./FirewallPolicyBase.sol";
  * This works by approving the ordered sequence of calls that must be made, and then asserting at each step
  * that the next call is as expected. Note that this doesn't assert that the entire sequence is executed.
  *
+ * NOTE: Misconfiguration of the approved calls may result in legitimate transactions being reverted.
+ * For example, transactions that also include internal calls must include the internal calls in the approved calls
+ * hash in order for the policy to work as expected.
+ *
+ * If you have any questions on how or when to use this modifier, please refer to the Firewall's documentation
+ * and/or contact our support.
+ *
  */
 contract ApprovedCallsPolicy is FirewallPolicyBase {
     // The role that is allowed to approve calls
     bytes32 public constant SIGNER_ROLE = keccak256("SIGNER_ROLE");
-
-    // We use this to get the trace as if the tx is approved by overriding the storage slot in the debug trace call
-    bytes32 private constant IS_EXECUTING_SIMULATION_SLOT = keccak256("IS_EXECUTING_SIMULATION"); // 0x5240afa92511149d1ea75355dd533487007d2505fa7bfdceab11878262a081b6
 
     // tx.origin => callHashes
     mapping (address => bytes32[]) public approvedCalls;
@@ -31,14 +46,6 @@ contract ApprovedCallsPolicy is FirewallPolicyBase {
     }
 
     /**
-     * @dev This modifier checks if the contract is currently executing a simulation.
-     */
-    modifier notInSimulation() {
-        if (_is_executing_simulation()) return;
-        _;
-    }
-
-    /**
      * @dev Before executing a call, check that the call has been approved by a signer.
      *
      * @param consumer The address of the contract that is being called.
@@ -46,7 +53,7 @@ contract ApprovedCallsPolicy is FirewallPolicyBase {
      * @param data The data that is being sent to the contract.
      * @param value The amount of value that is being sent to the contract.
      */
-    function preExecution(address consumer, address sender, bytes calldata data, uint value) external notInSimulation isAuthorized(consumer) {
+    function preExecution(address consumer, address sender, bytes calldata data, uint value) external isAuthorized(consumer) {
         bytes32[] storage approvedCallHashes = approvedCalls[tx.origin];
         require(approvedCallHashes.length > 0, "ApprovedCallsPolicy: call hashes empty");
         uint expiration = approvedCallsExpiration[tx.origin];
@@ -80,7 +87,8 @@ contract ApprovedCallsPolicy is FirewallPolicyBase {
         bytes memory signature
     ) external {
         require(nonce == nonces[txOrigin], "ApprovedCallsPolicy: invalid nonce");
-        bytes32 messageHash = keccak256(abi.encodePacked(_callHashes, expiration, txOrigin, nonce, block.chainid));
+        // Note that we add address(this) to the message to prevent replay attacks across policies
+        bytes32 messageHash = keccak256(abi.encodePacked(_callHashes, expiration, txOrigin, nonce, address(this), block.chainid));
         bytes32 ethSignedMessageHash = getEthSignedMessageHash(messageHash);
         address signer = recoverSigner(ethSignedMessageHash, signature);
         require(hasRole(SIGNER_ROLE, signer), "ApprovedCallsPolicy: invalid signer");
@@ -102,6 +110,13 @@ contract ApprovedCallsPolicy is FirewallPolicyBase {
     ) external onlyRole(SIGNER_ROLE) {
         approvedCalls[txOrigin] = _callHashes;
         approvedCallsExpiration[txOrigin] = expiration;
+    }
+
+    /**
+     * @dev See {IERC165-supportsInterface}.
+     */
+    function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
+        return interfaceId == type(IApprovedCallsPolicy).interfaceId || super.supportsInterface(interfaceId);
     }
 
     /**
@@ -153,7 +168,7 @@ contract ApprovedCallsPolicy is FirewallPolicyBase {
     ) public pure returns (address) {
         (bytes32 r, bytes32 s, uint8 v) = splitSignature(_signature);
 
-        return ecrecover(_ethSignedMessageHash, v, r, s);
+        return ECDSA.recover(_ethSignedMessageHash, v, r, s);
     }
 
     /**
@@ -189,14 +204,4 @@ contract ApprovedCallsPolicy is FirewallPolicyBase {
         // implicitly return (r, s, v)
     }
 
-    /**
-     * @dev This function is called to set the expiration time for approved call hashes.
-     * @return is_executing_simulation The expiration time for approved call hashes.
-     */
-    function _is_executing_simulation() private view returns (bool is_executing_simulation) {
-        bytes32 is_executing_simulation_slot = IS_EXECUTING_SIMULATION_SLOT;
-        assembly {
-            is_executing_simulation := sload(is_executing_simulation_slot)
-        }
-    }
 }

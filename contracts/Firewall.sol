@@ -313,6 +313,15 @@ contract Firewall is IFirewall, Ownable2Step {
      * @dev Admin only function allowing the consumers admin to add a policy to the consumers subscribed policies.
      * @param consumer The address of the consumer contract.
      * @param policy The address of the policy contract.
+     *
+     * NOTE: Policies that you register to may become obsolete in the future, there may be a an upgraded
+     * version of the policy in the future, and / or a new vulnerability may be found in a policy at some
+     * future time. For these reason, the Firewall Owner has the ability to disapprove a policy in the future,
+     * preventing consumers from being able to subscribe to it in the future.
+     *
+     * While doesn't block already-subscribed consumers from using the policy, it is highly recommended
+     * to have periodical reviews of the policies you are subscribed to and to make any required changes
+     * accordingly.
      */
     function addGlobalPolicy(address consumer, address policy) external onlyConsumerAdmin(consumer) {
         _addGlobalPolicy(consumer, policy);
@@ -333,6 +342,14 @@ contract Firewall is IFirewall, Ownable2Step {
      *
      * @param consumers The addresses of the consumer contracts.
      * @param policy The address of the policy contract.
+     * NOTE: Policies that you register to may become obsolete in the future, there may be a an upgraded
+     * version of the policy in the future, and / or a new vulnerability may be found in a policy at some
+     * future time. For these reason, the Firewall Owner has the ability to disapprove a policy in the future,
+     * preventing consumers from being able to subscribe to it in the future.
+     *
+     * While doesn't block already-subscribed consumers from using the policy, it is highly recommended
+     * to have periodical reviews of the policies you are subscribed to and to make any required changes
+     * accordingly.
      */
     function addGlobalPolicyForConsumers(address[] calldata consumers, address policy) external {
         for (uint i = 0; i < consumers.length; i++) {
@@ -360,6 +377,15 @@ contract Firewall is IFirewall, Ownable2Step {
      * @param consumer The address of the consumer contract.
      * @param methodSigs The method signatures of the consumer contract to which the policies apply
      * @param policies The addresses of the policy contracts.
+     *
+     * NOTE: Policies that you register to may become obsolete in the future, there may be a an upgraded
+     * version of the policy in the future, and / or a new vulnerability may be found in a policy at some
+     * future time. For these reason, the Firewall Owner has the ability to disapprove a policy in the future,
+     * preventing consumers from being able to subscribe to it in the future.
+     *
+     * While doesn't block already-subscribed consumers from using the policy, it is highly recommended
+     * to have periodical reviews of the policies you are subscribed to and to make any required changes
+     * accordingly.
      */
     function addPolicies(address consumer, bytes4[] calldata methodSigs, address[] calldata policies) external onlyConsumerAdmin(consumer) {
         for (uint i = 0; i < policies.length; i++) {
@@ -372,6 +398,15 @@ contract Firewall is IFirewall, Ownable2Step {
      * @param consumer The address of the consumer contract.
      * @param methodSig The method signature of the consumer contract to which the policy applies
      * @param policy The address of the policy contract.
+     *
+     * NOTE: Policies that you register to may become obsolete in the future, there may be a an upgraded
+     * version of the policy in the future, and / or a new vulnerability may be found in a policy at some
+     * future time. For these reason, the Firewall Owner has the ability to disapprove a policy in the future,
+     * preventing consumers from being able to subscribe to it in the future.
+     *
+     * While doesn't block already-subscribed consumers from using the policy, it is highly recommended
+     * to have periodical reviews of the policies you are subscribed to and to make any required changes
+     * accordingly.
      */
     function addPolicy(address consumer, bytes4 methodSig, address policy) external onlyConsumerAdmin(consumer) {
         _addPolicy(consumer, methodSig, policy);

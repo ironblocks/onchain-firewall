@@ -52,14 +52,16 @@ describe('Approved Calls Policy', () => {
         expiration,
         origin,
         nonce,
+        policyAddress,
     ) {
         const packed = ethers.utils.solidityPack(
-            ['bytes32[]', 'uint256', 'address', 'uint256', 'uint256'],
+            ['bytes32[]', 'uint256', 'address', 'uint256', 'address', 'uint256'],
             [
                 callHashes,
                 expiration,
                 origin,
                 nonce,
+                policyAddress,
                 31337, // hardhat chainid
             ]
         );
@@ -154,6 +156,7 @@ describe('Approved Calls Policy', () => {
                 ethers.utils.parseEther('1'), // expiration, yuge numba
                 addr1.address,
                 0,
+                approvedCallsPolicy.address,
             );
             // We pass the calls in reverse order because the bundle policy pops the last element
             await approvedCallsPolicy.approveCallsViaSignature(
@@ -161,7 +164,7 @@ describe('Approved Calls Policy', () => {
                 ethers.utils.parseEther('1'),
                 addr1.address,
                 0,
-                signature
+                signature,
             );
     
             let tx = sampleContractUser
@@ -187,21 +190,14 @@ describe('Approved Calls Policy', () => {
                 ethers.utils.parseEther('1'),
             ]
         );
-        const packed = ethers.utils.solidityPack(
-            ['bytes32[]', 'uint256', 'address', 'uint256', 'uint256'],
-            [
-                [depositCallHash],
-                ethers.utils.parseEther('1'), // expiration, yuge numba
-                addr1.address,
-                0,
-                31337, // hardhat chainid
-            ]
+        const signature = await createSignature(
+            owner,
+            [depositCallHash],
+            ethers.utils.parseEther('1'), // expiration, yuge numba
+            addr1.address,
+            0,
+            approvedCallsPolicy.address,
         );
-        const messageHash = ethers.utils.solidityKeccak256(
-            ['bytes'], [packed]
-        );
-        const messageHashBytes = ethers.utils.arrayify(messageHash)
-        const signature = await owner.signMessage(messageHashBytes);
         const approvePayload = approvedCallsPolicyIface.encodeFunctionData(
             'approveCallsViaSignature',
             [
@@ -235,21 +231,14 @@ describe('Approved Calls Policy', () => {
                 ethers.utils.parseEther('1'),
             ]
         );
-        const packed = ethers.utils.solidityPack(
-            ['bytes32[]', 'uint256', 'address', 'uint256', 'uint256'],
-            [
-                [depositCallHash],
-                ethers.utils.parseEther('1'), // expiration, yuge numba
-                addr1.address,
-                0,
-                31337, // hardhat chainid
-            ]
+        const signature = await createSignature(
+            owner,
+            [depositCallHash],
+            ethers.utils.parseEther('1'), // expiration, yuge numba
+            addr1.address,
+            0,
+            approvedCallsPolicy.address,
         );
-        const messageHash = ethers.utils.solidityKeccak256(
-            ['bytes'], [packed]
-        );
-        const messageHashBytes = ethers.utils.arrayify(messageHash)
-        const signature = await owner.signMessage(messageHashBytes);
         const approvePayload = approvedCallsPolicyIface.encodeFunctionData(
             'approveCallsViaSignature',
             [
@@ -282,21 +271,14 @@ describe('Approved Calls Policy', () => {
                 ethers.utils.parseEther('1'),
             ]
         );
-        const packed = ethers.utils.solidityPack(
-            ['bytes32[]', 'uint256', 'address', 'uint256', 'uint256'],
-            [
-                [depositCallHash],
-                ethers.utils.parseEther('1'), // expiration, yuge numba
-                addr1.address,
-                0,
-                31337, // hardhat chainid
-            ]
+        const signature = await createSignature(
+            owner,
+            [depositCallHash],
+            ethers.utils.parseEther('1'), // expiration, yuge numba
+            addr1.address,
+            0,
+            approvedCallsPolicy.address,
         );
-        const messageHash = ethers.utils.solidityKeccak256(
-            ['bytes'], [packed]
-        );
-        const messageHashBytes = ethers.utils.arrayify(messageHash)
-        const signature = await owner.signMessage(messageHashBytes);
         const approvePayload = approvedCallsPolicyIface.encodeFunctionData(
             'approveCallsViaSignature',
             [
@@ -335,21 +317,14 @@ describe('Approved Calls Policy', () => {
                 ethers.utils.parseEther('1'),
             ]
         );
-        const packed = ethers.utils.solidityPack(
-            ['bytes32[]', 'uint256', 'address', 'uint256', 'uint256'],
-            [
-                [depositCallHash],
-                ethers.utils.parseEther('1'), // expiration, yuge numba
-                addr1.address,
-                0,
-                31337, // hardhat chainid
-            ]
+        const signature = await createSignature(
+            owner,
+            [depositCallHash],
+            ethers.utils.parseEther('1'), // expiration, yuge numba
+            addr1.address,
+            0,
+            approvedCallsPolicy.address,
         );
-        const messageHash = ethers.utils.solidityKeccak256(
-            ['bytes'], [packed]
-        );
-        const messageHashBytes = ethers.utils.arrayify(messageHash)
-        const signature = await owner.signMessage(messageHashBytes);
         const approvePayload = approvedCallsPolicyIface.encodeFunctionData(
             'approveCallsViaSignature',
             [

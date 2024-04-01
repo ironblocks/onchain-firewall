@@ -13,6 +13,13 @@ import "./FirewallPolicyBase.sol";
  * approving a large and tested amount of known and approved "vectors" or "patterns", a protocol can allow
  * the vast majority of transactions to pass without requiring any type asynchronous approval mechanism.
  *
+ * NOTE: Misconfiguration of the approved vectors may result in legitimate transactions being reverted.
+ * For example, execution paths that include internal calls must also be included as approved vectors
+ * in order to work as expected.
+ *
+ * If you have any questions on how or when to use this modifier, please refer to the Firewall's documentation
+ * and/or contact our support.
+ *
  */
 contract ApprovedVectorsPolicy is FirewallPolicyBase {
 

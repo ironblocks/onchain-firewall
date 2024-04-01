@@ -5,7 +5,7 @@ pragma solidity 0.8.19;
 
 import "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
-import "./FirewallTransparentUpgradeableProxy.sol";
+import {IFirewallTransparentUpgradeableProxy} from "./FirewallTransparentUpgradeableProxy.sol";
 import "../interfaces/IFirewall.sol";
 import "../interfaces/IFirewallConsumer.sol";
 
@@ -28,7 +28,7 @@ contract FirewallProxyAdmin is ProxyAdmin {
      *
      * - This contract must be the admin of `proxy`.
      */
-    function getProxyFirewall(FirewallTransparentUpgradeableProxy proxy) public view virtual returns (address) {
+    function getProxyFirewall(IFirewallTransparentUpgradeableProxy proxy) public view virtual returns (address) {
         // We need to manually run the static call since the getter cannot be flagged as view
         // bytes4(keccak256("firewall()")) == 0xc22a4a85
         (bool success, bytes memory returndata) = address(proxy).staticcall(hex"c22a4a85");
@@ -46,7 +46,7 @@ contract FirewallProxyAdmin is ProxyAdmin {
      *
      * - This contract must be the admin of `proxy`.
      */
-    function getProxyFirewallAdmin(FirewallTransparentUpgradeableProxy proxy) public view virtual returns (address) {
+    function getProxyFirewallAdmin(IFirewallTransparentUpgradeableProxy proxy) public view virtual returns (address) {
         // We need to manually run the static call since the getter cannot be flagged as view
         // bytes4(keccak256("firewallAdmin()")) == 0xf05c8582
         (bool success, bytes memory returndata) = address(proxy).staticcall(hex"f05c8582");
@@ -64,7 +64,7 @@ contract FirewallProxyAdmin is ProxyAdmin {
      *
      * - This contract must be the current admin of `proxy`.
      */
-    function changeFirewall(FirewallTransparentUpgradeableProxy proxy, address newFirewall) public virtual onlyOwner {
+    function changeFirewall(IFirewallTransparentUpgradeableProxy proxy, address newFirewall) public virtual onlyOwner {
         proxy.changeFirewall(newFirewall);
     }
 
@@ -78,7 +78,7 @@ contract FirewallProxyAdmin is ProxyAdmin {
      *
      * - This contract must be the current admin of `proxy`.
      */
-    function changeFirewallAdmin(FirewallTransparentUpgradeableProxy proxy, address newFirewallAdmin) public virtual onlyOwner {
+    function changeFirewallAdmin(IFirewallTransparentUpgradeableProxy proxy, address newFirewallAdmin) public virtual onlyOwner {
         proxy.changeFirewallAdmin(newFirewallAdmin);
     }
 
