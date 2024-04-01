@@ -11,7 +11,7 @@ interface IApprovedCallsPolicy {
         bytes32[] calldata _callHashes,
         uint256 expiration,
         address txOrigin,
-        uint nonce,
+        uint256 nonce,
         bytes memory signature
     ) external;
 }
