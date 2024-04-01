@@ -13,6 +13,9 @@ import "./FirewallPolicyBase.sol";
  * for even better security). You can use this policy to allow a third party to approve the call after off-chain
  * authentication verifying that the owner of the contract is the one making the call.
  *
+ * NOTE: By desgin, this policy does not support the same function multiple times in a single transaction.
+ * This is a known tradeoff, which we believe makes for a good balance between security and usability.
+ *
  */
 contract AdminCallPolicy is FirewallPolicyBase {
     bytes32 public constant APPROVER_ROLE = keccak256("APPROVER_ROLE");
