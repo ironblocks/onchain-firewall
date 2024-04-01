@@ -4,10 +4,7 @@
 pragma solidity 0.8.19;
 
 import "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
-import "@openzeppelin/contracts/utils/Address.sol";
 import {IFirewallTransparentUpgradeableProxy} from "./FirewallTransparentUpgradeableProxy.sol";
-import "../interfaces/IFirewall.sol";
-import "../interfaces/IFirewallConsumer.sol";
 
 /**
  * @title Firewall Proxy Admin
