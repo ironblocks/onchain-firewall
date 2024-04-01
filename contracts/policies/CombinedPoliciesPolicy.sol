@@ -61,6 +61,7 @@ contract CombinedPoliciesPolicy is FirewallPolicyBase {
         allowedCombinationHashes = new bytes32[](_allowedCombinations.length);
         // Set all new combinations to true
         for (uint i = 0; i < _allowedCombinations.length; i++) {
+            require(_policies.length == _allowedCombinations[i].length, "CombinedPoliciesPolicy: Invalid combination length");
             isAllowedCombination[keccak256(abi.encodePacked(_allowedCombinations[i]))] = true;
             allowedCombinationHashes[i] = (keccak256(abi.encodePacked(_allowedCombinations[i])));
         }
