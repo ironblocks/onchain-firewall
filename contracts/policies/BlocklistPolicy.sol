@@ -21,7 +21,7 @@ contract BlocklistPolicy is FirewallPolicyBase {
      * @param consumer The address of the contract that is being called.
      * @param sender The address of the contract that is calling the consumer.
      */
-    function preExecution(address consumer, address sender, bytes calldata, uint) external view override {
+    function preExecution(address consumer, address sender, bytes calldata, uint256) external view override {
         require(!consumerBlocklist[consumer][sender], "BlocklistPolicy: Sender not allowed");
     }
 
@@ -29,7 +29,7 @@ contract BlocklistPolicy is FirewallPolicyBase {
      * @dev This function is called after the execution of a transaction.
      * It does nothing in this policy.
      */
-    function postExecution(address, address, bytes calldata, uint) external override {
+    function postExecution(address, address, bytes calldata, uint256) external override {
         // Do nothing
     }
 
@@ -42,7 +42,7 @@ contract BlocklistPolicy is FirewallPolicyBase {
      * @param status The blocklist status to set.
      */
     function setConsumerBlocklist(address consumer, address[] calldata accounts, bool status) external onlyRole(POLICY_ADMIN_ROLE) {
-        for (uint i = 0; i < accounts.length; i++) {
+        for (uint256 i = 0; i < accounts.length; i++) {
             consumerBlocklist[consumer][accounts[i]] = status;
         }
     }

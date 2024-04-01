@@ -21,7 +21,7 @@ import {FirewallPolicyBase} from "./FirewallPolicyBase.sol";
  */
 contract OnlyEOAPolicy is FirewallPolicyBase {
 
-    function preExecution(address, address sender, bytes calldata, uint) external view override {
+    function preExecution(address, address sender, bytes calldata, uint256) external view override {
         require(sender == tx.origin, "ONLY EOA");
     }
 
@@ -29,6 +29,6 @@ contract OnlyEOAPolicy is FirewallPolicyBase {
      * @dev This function is called after the execution of a transaction.
      * It does nothing in this policy.
      */
-    function postExecution(address, address, bytes calldata, uint) external override {}
+    function postExecution(address, address, bytes calldata, uint256) external override {}
 
 }

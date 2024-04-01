@@ -13,7 +13,7 @@ contract SampleContractUser {
         SampleConsumer(sampleConsumer).deposit{value: msg.value}();
     }
 
-    function withdraw(address sampleConsumer, uint amount) external {
+    function withdraw(address sampleConsumer, uint256 amount) external {
         SampleConsumer(sampleConsumer).withdraw(amount);
     }
 

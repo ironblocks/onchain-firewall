@@ -50,7 +50,7 @@ contract FirewallConsumerBase is IFirewallConsumer, Context {
             _;
             return;
         }
-        uint value = _msgValue();
+        uint256 value = _msgValue();
         IFirewall(firewall).preExecution(_msgSender(), _msgData(), value);
         _; 
         IFirewall(firewall).postExecution(_msgSender(), _msgData(), value);
@@ -81,7 +81,7 @@ contract FirewallConsumerBase is IFirewallConsumer, Context {
             _;
             return;
         }
-        uint value = _msgValue();
+        uint256 value = _msgValue();
         IFirewall(firewall).preExecution(_msgSender(), data, value);
         _; 
         IFirewall(firewall).postExecution(_msgSender(), data, value);
@@ -111,7 +111,7 @@ contract FirewallConsumerBase is IFirewallConsumer, Context {
             _;
             return;
         }
-        uint value = _msgValue();
+        uint256 value = _msgValue();
         IFirewall(firewall).preExecution(_msgSender(), abi.encodePacked(selector), value);
         _; 
         IFirewall(firewall).postExecution(_msgSender(), abi.encodePacked(selector), value);
@@ -131,7 +131,7 @@ contract FirewallConsumerBase is IFirewallConsumer, Context {
             _;
             return;
         }
-        uint value = _msgValue();
+        uint256 value = _msgValue();
         bytes32[] memory storageSlots = IFirewall(firewall).preExecutionPrivateInvariants(_msgSender(), _msgData(), value);
         bytes32[] memory preValues = _readStorage(storageSlots);
         _;
@@ -248,7 +248,7 @@ contract FirewallConsumerBase is IFirewallConsumer, Context {
      * @dev Internal helper funtion to get the msg.value
      * @return value of the msg.value
      */
-    function _msgValue() internal view returns (uint value) {
+    function _msgValue() internal view returns (uint256 value) {
         // We do this because msg.value can only be accessed in payable functions.
         assembly {
             value := callvalue()

@@ -24,7 +24,7 @@ contract AllowlistPolicy is FirewallPolicyBase {
      * @param consumer The address of the contract that is being called.
      * @param sender The address of the account that is calling the contract.
      */
-    function preExecution(address consumer, address sender, bytes calldata, uint) external view override {
+    function preExecution(address consumer, address sender, bytes calldata, uint256) external view override {
         require(consumerAllowlist[consumer][sender], "AllowlistPolicy: Sender not allowed");
     }
 
@@ -32,7 +32,7 @@ contract AllowlistPolicy is FirewallPolicyBase {
      * @dev This function is called after the execution of a transaction.
      * It does nothing in this policy.
      */
-    function postExecution(address, address, bytes calldata, uint) external override {
+    function postExecution(address, address, bytes calldata, uint256) external override {
         // Do nothing
     }
 
@@ -44,7 +44,7 @@ contract AllowlistPolicy is FirewallPolicyBase {
      * @param status The status to set the allowlist to.
      */
     function setConsumerAllowlist(address consumer, address[] calldata accounts, bool status) external onlyRole(POLICY_ADMIN_ROLE) {
-        for (uint i = 0; i < accounts.length; i++) {
+        for (uint256 i = 0; i < accounts.length; i++) {
             consumerAllowlist[consumer][accounts[i]] = status;
         }
     }

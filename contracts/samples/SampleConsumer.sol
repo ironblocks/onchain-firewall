@@ -10,8 +10,8 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract SampleConsumer is Ownable, FirewallConsumerBase {
 
-    mapping (address => uint) public deposits;
-    mapping (address => mapping (address => uint)) public tokenDeposits;
+    mapping (address => uint256) public deposits;
+    mapping (address => mapping (address => uint256)) public tokenDeposits;
 
     constructor(address firewall) FirewallConsumerBase(firewall, msg.sender) {}
 
@@ -19,17 +19,17 @@ contract SampleConsumer is Ownable, FirewallConsumerBase {
         deposits[msg.sender] += msg.value;
     }
 
-    function withdraw(uint amount) external firewallProtected {
+    function withdraw(uint256 amount) external firewallProtected {
         deposits[msg.sender] -= amount;
         Address.sendValue(payable(msg.sender), amount);
     }
 
-    function depositToken(address token, uint amount) external firewallProtected {
+    function depositToken(address token, uint256 amount) external firewallProtected {
         IERC20(token).transferFrom(msg.sender, address(this), amount);
         tokenDeposits[token][msg.sender] += amount;
     }
 
-    function withdrawToken(address token, uint amount) external firewallProtected {
+    function withdrawToken(address token, uint256 amount) external firewallProtected {
         tokenDeposits[token][msg.sender] -= amount;
         IERC20(token).transfer(msg.sender, amount);
     }

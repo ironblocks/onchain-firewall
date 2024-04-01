@@ -11,7 +11,7 @@ interface IApprovedCallsPolicy {
         bytes32[] calldata _callHashes,
         uint256 expiration,
         address txOrigin,
-        uint nonce,
+        uint256 nonce,
         bytes memory signature
     ) external;
 }
@@ -53,10 +53,10 @@ contract ApprovedCallsPolicy is FirewallPolicyBase {
      * @param data The data that is being sent to the contract.
      * @param value The amount of value that is being sent to the contract.
      */
-    function preExecution(address consumer, address sender, bytes calldata data, uint value) external isAuthorized(consumer) {
+    function preExecution(address consumer, address sender, bytes calldata data, uint256 value) external isAuthorized(consumer) {
         bytes32[] storage approvedCallHashes = approvedCalls[tx.origin];
         require(approvedCallHashes.length > 0, "ApprovedCallsPolicy: call hashes empty");
-        uint expiration = approvedCallsExpiration[tx.origin];
+        uint256 expiration = approvedCallsExpiration[tx.origin];
         require(expiration > block.timestamp, "ApprovedCallsPolicy: expired");
         bytes32 callHash = getCallHash(consumer, sender, tx.origin, data, value);
         bytes32 nextHash = approvedCallHashes[approvedCallHashes.length - 1];
@@ -68,7 +68,7 @@ contract ApprovedCallsPolicy is FirewallPolicyBase {
      * @dev This function is called after the execution of a transaction.
      * It does nothing in this policy.
      */
-    function postExecution(address, address, bytes calldata, uint) external override {
+    function postExecution(address, address, bytes calldata, uint256) external override {
     }
 
     /**
@@ -83,7 +83,7 @@ contract ApprovedCallsPolicy is FirewallPolicyBase {
         bytes32[] calldata _callHashes,
         uint256 expiration,
         address txOrigin,
-        uint nonce,
+        uint256 nonce,
         bytes memory signature
     ) external {
         require(nonce == nonces[txOrigin], "ApprovedCallsPolicy: invalid nonce");
@@ -134,7 +134,7 @@ contract ApprovedCallsPolicy is FirewallPolicyBase {
         address sender,
         address origin,
         bytes memory data,
-        uint value
+        uint256 value
     ) internal pure returns (bytes32) {
         return keccak256(abi.encodePacked(consumer, sender, origin, data, value));
     }

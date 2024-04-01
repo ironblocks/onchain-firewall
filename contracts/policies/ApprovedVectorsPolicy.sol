@@ -25,7 +25,7 @@ contract ApprovedVectorsPolicy is FirewallPolicyBase {
 
     // Execution States
     // tx.origin => block.number => vectorHash
-    mapping (address => mapping(uint => bytes32)) public originCurrentVectorHash;
+    mapping (address => mapping(uint256 => bytes32)) public originCurrentVectorHash;
 
     // Vector Hashes Approval Status
     mapping (bytes32 => bool) public approvedVectorHashes;
@@ -39,7 +39,7 @@ contract ApprovedVectorsPolicy is FirewallPolicyBase {
      *
      * @param consumer The address of the contract that is being called.
      */
-    function preExecution(address consumer, address, bytes calldata data, uint) external isAuthorized(consumer) {
+    function preExecution(address consumer, address, bytes calldata data, uint256) external isAuthorized(consumer) {
         bytes32 currentVectorHash = originCurrentVectorHash[tx.origin][block.number];
         bytes4 selector = bytes4(data);
         bytes32 newVectorHash = keccak256(abi.encodePacked(currentVectorHash, selector));
@@ -51,7 +51,7 @@ contract ApprovedVectorsPolicy is FirewallPolicyBase {
      * @dev This function is called after the execution of a transaction.
      * It does nothing in this policy.
      */
-    function postExecution(address, address, bytes calldata, uint) external override {
+    function postExecution(address, address, bytes calldata, uint256) external override {
     }
 
     /**
@@ -61,7 +61,7 @@ contract ApprovedVectorsPolicy is FirewallPolicyBase {
      * @param _vectorHashes The vector hashes to approve.
      */
     function approveMultipleHashes(bytes32[] calldata _vectorHashes) external onlyRole(POLICY_ADMIN_ROLE) {
-        for (uint i = 0; i < _vectorHashes.length; i++) {
+        for (uint256 i = 0; i < _vectorHashes.length; i++) {
             approvedVectorHashes[_vectorHashes[i]] = true;
         }
     }
@@ -73,7 +73,7 @@ contract ApprovedVectorsPolicy is FirewallPolicyBase {
      * @param _vectorHashes The vector hashes to remove.
      */
     function removeMultipleHashes(bytes32[] calldata _vectorHashes) external onlyRole(POLICY_ADMIN_ROLE) {
-        for (uint i = 0; i < _vectorHashes.length; i++) {
+        for (uint256 i = 0; i < _vectorHashes.length; i++) {
             approvedVectorHashes[_vectorHashes[i]] = false;
         }
     }

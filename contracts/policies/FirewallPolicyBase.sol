@@ -33,7 +33,7 @@ abstract contract FirewallPolicyBase is IFirewallPolicy, AccessControl {
      * @param statuses The approval status to set.
      */
     function setConsumersStatuses(address[] calldata consumers, bool[] calldata statuses) external onlyRole(POLICY_ADMIN_ROLE) {
-        for (uint i = 0; i < consumers.length; i++) {
+        for (uint256 i = 0; i < consumers.length; i++) {
             approvedConsumer[consumers[i]] = statuses[i];
         }
     }

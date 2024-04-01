@@ -75,7 +75,7 @@ contract FirewallTransparentUpgradeableProxy is TransparentUpgradeableProxy {
             return;
         }
 
-        uint value;
+        uint256 value;
         // We do this because msg.value can only be accessed in payable functions.
         assembly {
             value := callvalue()

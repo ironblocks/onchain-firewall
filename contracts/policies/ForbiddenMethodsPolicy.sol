@@ -42,7 +42,7 @@ contract ForbiddenMethodsPolicy is FirewallPolicyBase {
      * @param consumer The address of the contract that is being called.
      * @param data The data of the transaction.
      */
-    function preExecution(address consumer, address, bytes calldata data, uint) external override {
+    function preExecution(address consumer, address, bytes calldata data, uint256) external override {
         bytes32 currentContext = keccak256(abi.encodePacked(tx.origin, block.timestamp, tx.gasprice));
         if (consumerMethodStatus[consumer][bytes4(data)]) {
             hasEnteredForbiddenMethod[currentContext] = true;
@@ -53,7 +53,7 @@ contract ForbiddenMethodsPolicy is FirewallPolicyBase {
      * @dev This function is called after the execution of a transaction.
      * It reverts if the context has entered a forbidden method.
      */
-    function postExecution(address, address, bytes calldata, uint) external view override {
+    function postExecution(address, address, bytes calldata, uint256) external view override {
         bytes32 currentContext = keccak256(abi.encodePacked(tx.origin, block.timestamp, tx.gasprice));
         require(!hasEnteredForbiddenMethod[currentContext], "Forbidden method");
     }
