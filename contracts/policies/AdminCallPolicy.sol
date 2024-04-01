@@ -18,6 +18,7 @@ import "./FirewallPolicyBase.sol";
  *
  */
 contract AdminCallPolicy is FirewallPolicyBase {
+    // The role that is allowed to approve admin calls.
     bytes32 public constant APPROVER_ROLE = keccak256("APPROVER_ROLE");
 
     // The default amount of time a call hash is valid for after it is approved.
@@ -29,6 +30,15 @@ contract AdminCallPolicy is FirewallPolicyBase {
         authorizedExecutors[_firewallAddress] = true;
     }
 
+    /**
+     * @dev This function is called before the execution of a transaction.
+     * It checks if the call has been approved by a third party, and if it has, it checks if the approval has expired.
+     *
+     * @param consumer The address of the contract that is being called.
+     * @param sender The address of the account that is calling the contract.
+     * @param data The data that is being sent to the contract.
+     * @param value The amount of value that is being sent to the contract.
+     */
     function preExecution(address consumer, address sender, bytes calldata data, uint value) external isAuthorized(consumer) {
         bytes32 callHash = _getCallHash(consumer, sender, tx.origin, data, value);
         require(adminCallHashApprovalTimestamp[callHash] > 0, "AdminCallPolicy: Call not approved");
@@ -36,17 +46,41 @@ contract AdminCallPolicy is FirewallPolicyBase {
         adminCallHashApprovalTimestamp[callHash] = 0;
     }
 
+    /**
+     * @dev This function is called after the execution of a transaction.
+     * It does nothing in this policy.
+     */
     function postExecution(address, address, bytes calldata, uint) external override {
     }
 
+    /**
+     * @dev This function is called to set the expiration time for approved call hashes.
+     *
+     * @param _expirationTime The new expiration time.
+     */
     function setExpirationTime(uint _expirationTime) external onlyRole(APPROVER_ROLE) {
         expirationTime = _expirationTime;
     }
 
+    /**
+     * @dev This function is called to approve a call hash.
+     *
+     * @param _callHash The hash of the call that is being approved.
+     */
     function approveCall(bytes32 _callHash) external onlyRole(APPROVER_ROLE) {
         adminCallHashApprovalTimestamp[_callHash] = block.timestamp;
     }
 
+    /**
+     * @dev Internal helper function to get the hash of a call.
+     *
+     * @param consumer The address of the contract that is being called.
+     * @param sender The address of the account that is calling the contract.
+     * @param origin The address of the account that originated the call.
+     * @param data The data that is being sent to the contract.
+     * @param value The amount of value that is being sent to the contract.
+     * @return The hash of the call.
+     */
     function _getCallHash(
         address consumer,
         address sender,

@@ -20,8 +20,13 @@ import "./interfaces/IFirewallConsumer.sol";
  */
 contract FirewallConsumerBase is IFirewallConsumer, Context {
 
+    // This slot is used to store the firewall address
     bytes32 private constant FIREWALL_STORAGE_SLOT = bytes32(uint256(keccak256("eip1967.firewall")) - 1);
+
+    // This slot is used to store the firewall admin address
     bytes32 private constant FIREWALL_ADMIN_STORAGE_SLOT = bytes32(uint256(keccak256("eip1967.firewall.admin")) - 1);
+
+    // This slot is used to store the new firewall admin address (when changing admin)
     bytes32 private constant NEW_FIREWALL_ADMIN_STORAGE_SLOT = bytes32(uint256(keccak256("eip1967.new.firewall.admin")) - 1);
     bytes4 private constant SUPPORTS_APPROVE_VIA_SIGNATURE_INTERFACE_ID = bytes4(0x0c908cff); // sighash of approveCallsViaSignature
 
@@ -56,6 +61,7 @@ contract FirewallConsumerBase is IFirewallConsumer, Context {
      * the subscribed policies. Allows passing custom data to the firewall, not necessarily msg.data.
      * Useful for checking internal function calls
      *
+     * @param data custom data to be passed to the firewall
      * NOTE: Using this modifier affects the data that is passed to the firewall, and as such it is mainly meant
      * to be used by internal functions, and only in conjuction with policies that whose protection strategy
      * requires this data.
@@ -85,6 +91,7 @@ contract FirewallConsumerBase is IFirewallConsumer, Context {
      * @dev identical to the rest of the modifiers in terms of logic, but makes it more
      * aesthetic when all you want to pass are signatures/unique identifiers.
      *
+     * @param selector unique identifier for the function
      *
      * NOTE: Using this modifier affects the data that is passed to the firewall, and as such it is mainly to
      * be used by policies that whose protection strategy relies on the function's signature hahs.
@@ -135,6 +142,7 @@ contract FirewallConsumerBase is IFirewallConsumer, Context {
 
     /**
      * @dev modifier asserting that the target is approved
+     * @param target address of the target
      */
     modifier onlyApprovedTarget(address target) {
         // We use the same logic that solidity uses for mapping locations, but we add a pseudorandom
@@ -171,6 +179,10 @@ contract FirewallConsumerBase is IFirewallConsumer, Context {
      *
      * This can be used for multiple purposes, but the initial one is to call `approveCallsViaSignature` before
      * executing a function, allowing synchronous transaction approvals.
+     *
+     * @param target address of the target
+     * @param targetPayload payload to be sent to the target
+     * @param data data to be executed after the target call
      */
     function safeFunctionCall(
         address target,
@@ -187,6 +199,9 @@ contract FirewallConsumerBase is IFirewallConsumer, Context {
      * @dev Allows firewall admin to set approved targets.
      * IMPORTANT: Only set approved target if you know what you're doing. Anyone can cause this contract
      * to send any data to an approved target.
+     *
+     * @param target address of the target
+     * @param status status of the target
      */
     function setApprovedTarget(address target, bool status) external onlyFirewallAdmin {
         bytes32 _slot = keccak256(abi.encode(APPROVED_TARGETS_MAPPING_SLOT, target));
@@ -204,6 +219,7 @@ contract FirewallConsumerBase is IFirewallConsumer, Context {
 
     /**
      * @dev Admin only function allowing the consumers admin to set the firewall address.
+     * @param _firewall address of the firewall
      */
     function setFirewall(address _firewall) external onlyFirewallAdmin {
         _setAddressBySlot(FIREWALL_STORAGE_SLOT, _firewall);
@@ -212,6 +228,7 @@ contract FirewallConsumerBase is IFirewallConsumer, Context {
 
     /**
      * @dev Admin only function, sets new firewall admin. New admin must accept.
+     * @param _firewallAdmin address of the new firewall admin
      */
     function setFirewallAdmin(address _firewallAdmin) external onlyFirewallAdmin {
         require(_firewallAdmin != address(0), "FirewallConsumer: zero address");
@@ -227,6 +244,10 @@ contract FirewallConsumerBase is IFirewallConsumer, Context {
         emit FirewallAdminUpdated(msg.sender);
     }
 
+    /**
+     * @dev Internal helper funtion to get the msg.value
+     * @return value of the msg.value
+     */
     function _msgValue() internal view returns (uint value) {
         // We do this because msg.value can only be accessed in payable functions.
         assembly {
@@ -234,6 +255,10 @@ contract FirewallConsumerBase is IFirewallConsumer, Context {
         }
     }
 
+    /**
+     * @dev Internal helper function to read storage slots
+     * @param storageSlots array of storage slots
+     */
     function _readStorage(bytes32[] memory storageSlots) internal view returns (bytes32[] memory) {
         uint256 slotsLength = storageSlots.length;
         bytes32[] memory values = new bytes32[](slotsLength);
@@ -245,18 +270,33 @@ contract FirewallConsumerBase is IFirewallConsumer, Context {
         return values;
     }
 
+    /**
+     * @dev Internal helper function to set an address in a storage slot
+     * @param _slot storage slot
+     * @param _address address to be set
+     */
     function _setAddressBySlot(bytes32 _slot, address _address) internal {
         assembly {
             sstore(_slot, _address)
         }
     }
 
+    /**
+     * @dev Internal helper function to get an address from a storage slot
+     * @param _slot storage slot
+     * @return _address from the storage slot
+     */
     function _getAddressBySlot(bytes32 _slot) internal view returns (address _address) {
         assembly {
             _address := sload(_slot)
         }
     }
 
+    /**
+     * @dev Internal helper function to get a value from a storage slot
+     * @param _slot storage slot
+     * @return _value from the storage slot
+     */
     function _getValueBySlot(bytes32 _slot) internal view returns (bytes32 _value) {
         assembly {
             _value := sload(_slot)

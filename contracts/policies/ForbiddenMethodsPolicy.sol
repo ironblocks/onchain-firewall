@@ -29,9 +29,19 @@ import "./FirewallPolicyBase.sol";
  */
 contract ForbiddenMethodsPolicy is FirewallPolicyBase {
 
+    // consumer => methodSig => bool
     mapping (address => mapping (bytes4 => bool)) public consumerMethodStatus;
+
+    // context => bool
     mapping (bytes32 => bool) public hasEnteredForbiddenMethod;
 
+    /**
+     * @dev This function is called before the execution of a transaction.
+     * It marks the context as having entered a forbidden method if the method is forbidden.
+     *
+     * @param consumer The address of the contract that is being called.
+     * @param data The data of the transaction.
+     */
     function preExecution(address consumer, address, bytes calldata data, uint) external override {
         bytes32 currentContext = keccak256(abi.encodePacked(tx.origin, block.timestamp, tx.gasprice));
         if (consumerMethodStatus[consumer][bytes4(data)]) {
@@ -39,11 +49,22 @@ contract ForbiddenMethodsPolicy is FirewallPolicyBase {
         }
     }
 
+    /**
+     * @dev This function is called after the execution of a transaction.
+     * It reverts if the context has entered a forbidden method.
+     */
     function postExecution(address, address, bytes calldata, uint) external view override {
         bytes32 currentContext = keccak256(abi.encodePacked(tx.origin, block.timestamp, tx.gasprice));
         require(!hasEnteredForbiddenMethod[currentContext], "Forbidden method");
     }
 
+    /**
+     * @dev This function is called to set the forbidden status of a method.
+     *
+     * @param consumer The address of the contract that is being called.
+     * @param methodSig The signature of the method to set the forbidden status for.
+     * @param status The forbidden status to set.
+     */
     function setConsumerForbiddenMethod(address consumer, bytes4 methodSig, bool status) external onlyRole(POLICY_ADMIN_ROLE) {
         consumerMethodStatus[consumer][methodSig] = status;
     }

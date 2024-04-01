@@ -18,6 +18,10 @@ contract OnlyEOAPolicy is FirewallPolicyBase {
         require(sender == tx.origin, "ONLY EOA");
     }
 
+    /**
+     * @dev This function is called after the execution of a transaction.
+     * It does nothing in this policy.
+     */
     function postExecution(address, address, bytes calldata, uint) external override {}
 
 }

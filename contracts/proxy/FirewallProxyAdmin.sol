@@ -14,12 +14,15 @@ import "../interfaces/IFirewallConsumer.sol";
  * @author David Benchimol @ Ironblocks
  * @dev This contract acts the same as OpenZeppelins `ProxyAdmin` contract,
  * but built to work with Ironblocks FirewallTransparentUpgradeableProxy.
- * 
+ *
  */
 contract FirewallProxyAdmin is ProxyAdmin {
 
     /**
      * @dev Returns the current firewall of `proxy`.
+     *
+     * @param proxy The proxy to query.
+     * @return The address of the firewall of `proxy`.
      *
      * Requirements:
      *
@@ -36,6 +39,9 @@ contract FirewallProxyAdmin is ProxyAdmin {
     /**
      * @dev Returns the current firewall admin of `proxy`.
      *
+     * @param proxy The proxy to query.
+     * @return The address of the firewall admin of `proxy`.
+     *
      * Requirements:
      *
      * - This contract must be the admin of `proxy`.
@@ -51,6 +57,9 @@ contract FirewallProxyAdmin is ProxyAdmin {
     /**
      * @dev Changes the firewall of `proxy` to `newFirewall`.
      *
+     * @param proxy The proxy to change the firewall of.
+     * @param newFirewall The address of the new firewall
+     *
      * Requirements:
      *
      * - This contract must be the current admin of `proxy`.
@@ -61,6 +70,9 @@ contract FirewallProxyAdmin is ProxyAdmin {
 
     /**
      * @dev Changes the firewall admin of `proxy` to `newFirewallAdmin`.
+     *
+     * @param proxy The address of the proxy
+     * @param newFirewallAdmin The address of the new admin of the firewall
      *
      * Requirements:
      *

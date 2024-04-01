@@ -35,6 +35,9 @@ contract FirewallTransparentUpgradeableProxy is TransparentUpgradeableProxy {
 
     event FirewallAdminUpdated(address newAdmin);
     event FirewallUpdated(address newFirewall);
+    /**
+     * @dev Emitted when a static call is detected.
+     */
     event StaticCallCheck();
 
     /**
@@ -224,6 +227,13 @@ contract FirewallTransparentUpgradeableProxy is TransparentUpgradeableProxy {
         emit FirewallUpdated(_firewall);
     }
 
+    /**
+     * @dev We can't call `TransparentUpgradeableProxy._delegate` because it uses an inline `RETURN`
+     *      Since we have checks after the implementation call we need to save the return data,
+     *      perform the checks, and only then return the data
+     *
+     * @param _toimplementation The address of the implementation to delegate the call to
+     */
     function _internalDelegate(address _toimplementation) private firewallProtected returns (bytes memory) {
         bytes memory ret_data = Address.functionDelegateCall(_toimplementation, msg.data);
         return ret_data;

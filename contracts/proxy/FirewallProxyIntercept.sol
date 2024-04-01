@@ -71,6 +71,13 @@ contract FirewallProxyIntercept is TransparentUpgradeableProxy {
         TransparentUpgradeableProxy(_logic, admin_, new bytes(0))
     {}
 
+    /**
+     * @dev Initializes the intercepter with firewall, firewallAdmin, and firewallInterceptImplementation.
+     *
+     * @param _firewall The firewall address.
+     * @param _firewallAdmin The firewall admin address.
+     * @param _logic The firewall intercept implementation address.
+     */
     function initialize(
         address _firewall,
         address _firewallAdmin,
@@ -195,6 +202,7 @@ contract FirewallProxyIntercept is TransparentUpgradeableProxy {
 
     /**
      * @dev Stores a new address in the firewall admin slot.
+     * @param _firewallAdmin The address of the new firewall admin
      */
     function _changeFirewallAdmin(address _firewallAdmin) private {
         StorageSlot.getAddressSlot(FIREWALL_ADMIN_STORAGE_SLOT).value = _firewallAdmin;
@@ -203,6 +211,7 @@ contract FirewallProxyIntercept is TransparentUpgradeableProxy {
 
     /**
      * @dev Stores a new address in the firewall intercept implementation slot.
+     * @param _firewallInterceptImplementation The address of the new firewall intercept implementation
      */
     function _changeFirewallInterceptImplementation(address _firewallInterceptImplementation) private {
         StorageSlot.getAddressSlot(FIREWALL_INTERCEPT_IMPLEMENTATION_STORAGE_SLOT).value = _firewallInterceptImplementation;
@@ -218,12 +227,20 @@ contract FirewallProxyIntercept is TransparentUpgradeableProxy {
 
     /**
      * @dev Stores a new address in the firewall implementation slot.
+     * @param _firewall The address of the new firewall
      */
     function _changeFirewall(address _firewall) private {
         StorageSlot.getAddressSlot(FIREWALL_STORAGE_SLOT).value = _firewall;
         emit FirewallUpdated(_firewall);
     }
 
+    /**
+     * @dev We can't call `TransparentUpgradeableProxy._delegate` because it uses an inline `RETURN`
+     *      Since we have checks after the implementation call we need to save the return data,
+     *      perform the checks, and only then return the data
+     *
+     * @param _toimplementation The address of the implementation to delegate the call to
+     */
     function _internalDelegate(address _toimplementation) private firewallProtected returns (bytes memory) {
         bytes memory ret_data = Address.functionDelegateCall(_toimplementation, msg.data);
         return ret_data;
