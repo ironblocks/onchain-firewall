@@ -12,6 +12,9 @@ abstract contract FirewallPolicyBase is IFirewallPolicy, AccessControl {
     mapping (address => bool) public authorizedExecutors;
     mapping (address => bool) public approvedConsumer;
 
+    /**
+     * @dev Modifier to check if the consumer is authorized to execute the function.
+     */
     modifier isAuthorized(address consumer) {
         require(authorizedExecutors[msg.sender], "FirewallPolicy: Only authorized executor");
         require(approvedConsumer[consumer], "FirewallPolicy: Only approved consumers");
@@ -22,12 +25,25 @@ abstract contract FirewallPolicyBase is IFirewallPolicy, AccessControl {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
+    /**
+     * @dev Sets approval status of multiple consumers.
+     * This is useful for adding a large amount of consumers to the allowlist in a single transaction.
+     *
+     * @param consumers The consumers to set the approval status for.
+     * @param statuses The approval status to set.
+     */
     function setConsumersStatuses(address[] calldata consumers, bool[] calldata statuses) external onlyRole(POLICY_ADMIN_ROLE) {
         for (uint i = 0; i < consumers.length; i++) {
             approvedConsumer[consumers[i]] = statuses[i];
         }
     }
 
+    /**
+     * @dev Sets the executor status.
+     *
+     * @param caller The address of the executor.
+     * @param status The executor status to set.
+     */
     function setExecutorStatus(address caller, bool status) external onlyRole(POLICY_ADMIN_ROLE) {
         authorizedExecutors[caller] = status;
     }
