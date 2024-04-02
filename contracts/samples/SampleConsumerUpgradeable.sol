@@ -8,8 +8,9 @@ import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract SampleConsumerUpgradeable is OwnableUpgradeable {
-    mapping (address => uint256) public deposits;
-    mapping (address => mapping (address => uint256)) public tokenDeposits;
+
+    mapping (address user => uint256 ethBalance) public deposits;
+    mapping (address user => mapping (address token => uint256 tokenBalance)) public tokenDeposits;
 
     function initialize() external initializer {
         __Ownable_init();

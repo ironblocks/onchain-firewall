@@ -35,11 +35,11 @@ contract ApprovedCallsPolicy is FirewallPolicyBase {
     bytes32 public constant SIGNER_ROLE = keccak256("SIGNER_ROLE");
 
     // tx.origin => callHashes
-    mapping (address => bytes32[]) public approvedCalls;
+    mapping (address txOrigin => bytes32[] approvedCallHashes) public approvedCalls;
     // tx.origin => time of approved calls
-    mapping (address => uint256) public approvedCallsExpiration;
+    mapping (address txOrigin => uint256 expiration) public approvedCallsExpiration;
     // tx.origin => nonce
-    mapping (address => uint256) public nonces;
+    mapping (address txOrigin => uint256 nonce) public nonces;
 
     constructor(address _firewallAddress) FirewallPolicyBase() {
         authorizedExecutors[_firewallAddress] = true;

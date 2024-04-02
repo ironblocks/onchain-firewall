@@ -15,7 +15,7 @@ contract AllowlistPolicy is FirewallPolicyBase {
      * @dev A mapping of consumer addresses to a mapping of sender addresses to a boolean value.
      * The boolean value is true if the sender is allowed to call the consumer, and false if they are not.
      */
-    mapping (address => mapping (address => bool)) public consumerAllowlist;
+    mapping (address consumer => mapping (address caller => bool isAllowed)) public consumerAllowlist;
 
     /**
      * @dev This function is called before the execution of a transaction.

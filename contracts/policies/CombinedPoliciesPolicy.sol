@@ -19,7 +19,7 @@ contract CombinedPoliciesPolicy is FirewallPolicyBase {
     bytes32[] public allowedCombinationHashes;
 
     // combination hash => bool
-    mapping (bytes32 => bool) public isAllowedCombination;
+    mapping (bytes32 combinationHash => bool isAllowedHash) public isAllowedCombination;
 
     address[] public policies;
     bool[][] public currentResults;

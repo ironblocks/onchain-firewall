@@ -12,7 +12,7 @@ import {FirewallPolicyBase} from "./FirewallPolicyBase.sol";
 contract BlocklistPolicy is FirewallPolicyBase {
 
     // consumer => sender => bool
-    mapping (address => mapping (address => bool)) public consumerBlocklist;
+    mapping (address consumer => mapping (address caller => bool isCallerBlocked)) public consumerBlocklist;
 
     /**
      * @dev This function is called before the execution of a transaction.

@@ -8,7 +8,7 @@ import {IFirewallPrivateInvariantsPolicy} from "../interfaces/IFirewallPrivateIn
 
 contract SamplePrivateInvariantsPolicy is IFirewallPrivateInvariantsPolicy, Ownable {
 
-    mapping (address => mapping(bytes4 => bytes32[])) public sighashInvariantStorageSlots;
+    mapping (address consumer => mapping(bytes4 sighash => bytes32[] storageSlots)) public sighashInvariantStorageSlots;
 
     function preExecution(
         address consumer,

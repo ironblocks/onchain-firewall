@@ -147,15 +147,15 @@ contract Firewall is IFirewall, Ownable2Step {
     }
 
     // Mapping of policies approved by firewall owner
-    mapping (address => bool) public approvedPolicies;
+    mapping (address policy => bool isApproved) public approvedPolicies;
     // Mapping of consumer + sighash to array of policy addresses
-    mapping (address => mapping (bytes4 => address[])) public subscribedPolicies;
+    mapping (address consumer => mapping (bytes4 sighash => address[] policies)) public subscribedPolicies;
     // Mapping of consumer to array of policy addresses applied to all consumer methods
-    mapping (address => address[]) public subscribedGlobalPolicies;
+    mapping (address consumer => address[] globalPolicies) public subscribedGlobalPolicies;
     // Mapping of consumer + sighash to a single invariant policy
-    mapping (address => mapping (bytes4 => address)) public subscribedPrivateInvariantsPolicy;
+    mapping (address consumer => mapping (bytes4 sighash => address privateInvariantsPolicy)) public subscribedPrivateInvariantsPolicy;
     // Mapping of consumer to boolean indicating whether dry-run mode is enabled or not
-    mapping (address => bool) public dryrunEnabled;
+    mapping (address consumer => bool dryrun) public dryrunEnabled;
 
     /**
      * @dev Runs the preExecution hook of all subscribed policies.

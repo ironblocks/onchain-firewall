@@ -25,10 +25,9 @@ contract ApprovedVectorsPolicy is FirewallPolicyBase {
 
     // Execution States
     // tx.origin => block.number => vectorHash
-    mapping (address => mapping(uint256 => bytes32)) public originCurrentVectorHash;
-
+    mapping (address txOrigin => mapping(uint256 blockNumber => bytes32 currentVectorHash)) public originCurrentVectorHash;
     // Vector Hashes Approval Status
-    mapping (bytes32 => bool) public approvedVectorHashes;
+    mapping (bytes32 vectorHash => bool isApproved) public approvedVectorHashes;
 
     constructor(address _firewallAddress) FirewallPolicyBase() {
         authorizedExecutors[_firewallAddress] = true;

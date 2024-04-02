@@ -30,10 +30,9 @@ import {FirewallPolicyBase} from "./FirewallPolicyBase.sol";
 contract ForbiddenMethodsPolicy is FirewallPolicyBase {
 
     // consumer => methodSig => bool
-    mapping (address => mapping (bytes4 => bool)) public consumerMethodStatus;
-
+    mapping (address consumer => mapping (bytes4 sighash => bool isForbidden)) public consumerMethodStatus;
     // context => bool
-    mapping (bytes32 => bool) public hasEnteredForbiddenMethod;
+    mapping (bytes32 currentContextHash => bool hasEntered) public hasEnteredForbiddenMethod;
 
     /**
      * @dev This function is called before the execution of a transaction.

@@ -24,7 +24,7 @@ contract AdminCallPolicy is FirewallPolicyBase {
     // The default amount of time a call hash is valid for after it is approved.
     uint256 public expirationTime = 1 days;
     // The timestamp that a call hash was approved at (if approved at all).
-    mapping (bytes32 => uint256) public adminCallHashApprovalTimestamp;
+    mapping (bytes32 callHash => uint256 approvedAtTimestamp) public adminCallHashApprovalTimestamp;
 
     constructor(address _firewallAddress) FirewallPolicyBase() {
         authorizedExecutors[_firewallAddress] = true;
