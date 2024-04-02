@@ -262,12 +262,13 @@ describe('Balance Change Or Approved Calls Policy (CPP)', function () {
             ]
         );
         const packed = ethers.utils.solidityPack(
-            ['bytes32[]', 'uint256', 'address', 'uint256', 'uint256'],
+            ['bytes32[]', 'uint256', 'address', 'uint256', 'address', 'uint256'],
             [
                 [withdrawCallHash, depositCallHash],
                 ethers.utils.parseEther('1'), // expiration, yuge numba
                 addr1.address,
                 0,
+                approvedCallsPolicy.address,
                 31337, // hardhat chainid
             ]
         );

@@ -3,14 +3,14 @@
 // Copyright (c) Ironblocks 2023
 pragma solidity 0.8.19;
 
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "@openzeppelin/contracts/utils/Address.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {Address} from "@openzeppelin/contracts/utils/Address.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract SampleConsumerUpgradeable is OwnableUpgradeable {
 
-    mapping (address user => uint ethBalance) public deposits;
-    mapping (address user => mapping (address token => uint tokenBalance)) public tokenDeposits;
+    mapping (address user => uint256 ethBalance) public deposits;
+    mapping (address user => mapping (address token => uint256 tokenBalance)) public tokenDeposits;
 
     function initialize() external initializer {
         __Ownable_init();
@@ -20,17 +20,17 @@ contract SampleConsumerUpgradeable is OwnableUpgradeable {
         deposits[msg.sender] += msg.value;
     }
 
-    function withdraw(uint amount) external {
+    function withdraw(uint256 amount) external {
         deposits[msg.sender] -= amount;
         Address.sendValue(payable(msg.sender), amount);
     }
 
-    function depositToken(address token, uint amount) external {
+    function depositToken(address token, uint256 amount) external {
         IERC20(token).transferFrom(msg.sender, address(this), amount);
         tokenDeposits[token][msg.sender] += amount;
     }
 
-    function withdrawToken(address token, uint amount) external {
+    function withdrawToken(address token, uint256 amount) external {
         tokenDeposits[token][msg.sender] -= amount;
         IERC20(token).transfer(msg.sender, amount);
     }

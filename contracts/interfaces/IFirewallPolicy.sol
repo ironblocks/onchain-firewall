@@ -4,6 +4,6 @@
 pragma solidity 0.8.19;
 
 interface IFirewallPolicy {
-    function preExecution(address consumer, address sender, bytes memory data, uint value) external;
-    function postExecution(address consumer, address sender, bytes memory data, uint value) external;
+    function preExecution(address consumer, address sender, bytes memory data, uint256 value) external;
+    function postExecution(address consumer, address sender, bytes memory data, uint256 value) external;
 }
