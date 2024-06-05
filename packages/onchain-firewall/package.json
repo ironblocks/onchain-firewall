@@ -3,28 +3,9 @@
     "version": "1.0.0",
     "private": true,
     "description": "Ironblocks Onchain Firewall",
-    "keywords": [
-        "ethereum",
-        "smart-contracts",
-        "hardhat",
-        "firewall"
-    ],
-    "bugs": {
-        "url": "https://github.com/ironblocks/onchain-firewall/issues"
-    },
-    "homepage": "https://github.com/ironblocks/onchain-firewall#readme",
     "scripts": {
         "build": "hardhat compile",
         "test": "hardhat test"
-    },
-    "license": "SEE LICENSE IN LICENSE",
-    "author": {
-        "name": "Ironblocks",
-        "email": "firewall@ironblocks.com"
-    },
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/ironblocks/onchain-firewall"
     },
     "devDependencies": {
         "@nomiclabs/hardhat-ethers": "^2.2.0",
@@ -44,5 +25,22 @@
         "@openzeppelin/contracts-upgradeable": "^4.8.0-rc.1",
         "@openzeppelin/hardhat-upgrades": "^1.21.0",
         "dotenv": "^16.0.3"
+    },
+    "keywords": [
+        "ethereum",
+        "smart-contracts",
+        "hardhat",
+        "firewall",
+        "security"
+    ],
+    "bugs": {
+        "url": "https://github.com/ironblocks/onchain-firewall/issues"
+    },
+    "homepage": "https://github.com/ironblocks/onchain-firewall#readme",
+    "license": "SEE LICENSE IN LICENSE",
+    "author": "IRONBLOCKS LTD",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/ironblocks/onchain-firewall"
     }
 }
