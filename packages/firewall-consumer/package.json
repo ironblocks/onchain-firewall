@@ -21,7 +21,8 @@
     },
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/ironblocks/firewall-consumer.git"
+        "url": "git+https://github.com/ironblocks/onchain-firewall.git",
+        "directory": "packages/firewall-consumer"
     },
     "keywords": [
         "ethereum",
@@ -33,7 +34,7 @@
     "author": "IRONBLOCKS LTD",
     "license": "SEE LICENSE IN LICENSE",
     "bugs": {
-        "url": "https://github.com/ironblocks/firewall-consumer/issues"
+        "url": "https://github.com/ironblocks/onchain-firewall/issues"
     },
-    "homepage": "https://github.com/ironblocks/firewall-consumer#readme"
+    "homepage": "https://github.com/ironblocks/onchain-firewall#readme"
 }

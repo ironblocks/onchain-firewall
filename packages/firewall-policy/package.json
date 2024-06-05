@@ -7,7 +7,8 @@
     },
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/ironblocks/firewall-policy.git"
+        "url": "git+https://github.com/ironblocks/onchain-firewall",
+        "directory": "packages/firewall-policy"
     },
     "keywords": [
         "security"
@@ -15,7 +16,7 @@
     "author": "IRONBLOCKS LTD",
     "license": "SEE LICENSE IN LICENSE",
     "bugs": {
-        "url": "https://github.com/ironblocks/firewall-policy/issues"
+        "url": "https://github.com/ironblocks/onchain-firewall/issues"
     },
-    "homepage": "https://github.com/ironblocks/firewall-policy#readme"
+    "homepage": "https://github.com/ironblocks/onchain-firewall#readme"
 }

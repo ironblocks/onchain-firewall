@@ -41,6 +41,7 @@
     "author": "IRONBLOCKS LTD",
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/ironblocks/onchain-firewall"
+        "url": "git+https://github.com/ironblocks/onchain-firewall",
+        "directory": "packages/onchain-firewall"
     }
 }
