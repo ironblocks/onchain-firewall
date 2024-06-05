@@ -1,11 +1,1 @@
-node_modules
-.env
-coverage
-coverage.json
-typechain
-
-#Hardhat files
-abi
-cache
-artifacts
-.openzeppelin
+node_modules/
