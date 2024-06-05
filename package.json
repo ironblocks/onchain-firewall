@@ -2,10 +2,12 @@
     "name": "onchain-firewall",
     "version": "1.0.0",
     "description": "Ironblocks' monorepo for the Firewall's smart contracts",
+    "private": true,
+    "workspaces": [
+        "packages/*"
+    ],
     "scripts": {
-        "bootstrap": "lerna bootstrap",
-        "publish": "lerna publish",
-        "clean": "lerna clean"
+        "test": "lerna run test"
     },
     "author": "Ironblocks LTD",
     "devDependencies": {
