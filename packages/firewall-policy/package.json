@@ -1,0 +1,22 @@
+{
+    "name": "@ironblocks/firewall-policy",
+    "version": "1.0.3",
+    "description": "A Firewall Policy SDK to enforce custom business rules",
+    "dependencies": {
+        "@openzeppelin/contracts": "^4.7.3"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/ironblocks/onchain-firewall",
+        "directory": "packages/firewall-policy"
+    },
+    "keywords": [
+        "security"
+    ],
+    "author": "IRONBLOCKS LTD",
+    "license": "SEE LICENSE IN LICENSE",
+    "bugs": {
+        "url": "https://github.com/ironblocks/onchain-firewall/issues"
+    },
+    "homepage": "https://github.com/ironblocks/onchain-firewall#readme"
+}
