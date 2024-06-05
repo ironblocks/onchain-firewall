@@ -1,9 +1,8 @@
 # <img src="https://www.ironblocks.com/logo.svg" alt="Ironblocks" height="40px">
 
-
 ### Usage
 
-Once installed, you can use the contracts in the library by importing them:
+Once installed, you can use the contracts in the library by importing them :
 
 ```solidity
 pragma solidity 0.8.19;

@@ -2,7 +2,7 @@
 
 ### Usage
 
-Once installed, you can use the contracts in the library by importing them:
+Once installed, you can use the contracts in the library by importing them :
 
 ```solidity
 pragma solidity ^0.8;
