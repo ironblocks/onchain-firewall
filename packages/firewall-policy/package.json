@@ -1,6 +1,6 @@
 {
     "name": "@ironblocks/firewall-policy",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "description": "A Firewall Policy SDK to enforce custom business rules",
     "dependencies": {
         "@openzeppelin/contracts": "^4.7.3"
