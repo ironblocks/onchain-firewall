@@ -1,6 +1,6 @@
 {
     "name": "@ironblocks/firewall-consumer",
-    "version": "1.0.8",
+    "version": "1.0.7",
     "description": "Provided interface for smart contracts to connect to Ironblocks' Firewall",
     "devDependencies": {
         "@nomiclabs/hardhat-ethers": "^2.2.0",
