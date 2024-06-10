@@ -3,7 +3,7 @@
 // Copyright (c) Ironblocks 2024
 pragma solidity ^0.8;
 
-import "./FirewallConsumerBase.sol";
+import {FirewallConsumerBase} from "./FirewallConsumerBase.sol";
 
 /**
  * @title Firewall Consumer
