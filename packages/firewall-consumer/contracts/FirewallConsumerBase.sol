@@ -213,7 +213,7 @@ contract FirewallConsumerBase is IFirewallConsumer, Context {
     /**
      * @dev View function for the firewall admin
      */
-    function firewallAdmin() external view returns (address) {
+    function firewallAdmin() external override view returns (address) {
         return _getAddressBySlot(FIREWALL_ADMIN_STORAGE_SLOT);
     }
 
