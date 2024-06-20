@@ -32,7 +32,24 @@ An SDK to build your own custom policies for the OnChain Firewall.
 
 ## Getting Started
 
-To get started with any of these packages, please refer to their individual `README.md` files.
+### Root Dependencies
+
+Most of the dependencies in this monorepo can be hoisted by NPM. Install them by running:
+
+```shell
+npm install
+```
+
+### Package Dependencies
+
+In addition, make sure to also install un-hoisted dependencies in each package, by running:
+
+```shell
+cd packages/<package-folder>
+npm install
+```
+
+Next, please refer to the `README.md` files of packages you'll be working with for any additional details.
 
 ## License
 
