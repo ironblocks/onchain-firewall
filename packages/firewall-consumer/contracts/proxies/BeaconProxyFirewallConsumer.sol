@@ -11,7 +11,7 @@ import {ProxyFirewallConsumerBase} from "./ProxyFirewallConsumerBase.sol";
  * with a zero-address in the constructor or if the contract is upgradeable and the proxy was initialized before this implementation was deployed
  */
 contract BeaconProxyFirewallConsumer is ProxyFirewallConsumerBase {
-    bytes32 private constant BEACON_SLOT = 0xa3f0ad74e5423aebfd80d3ef4346578335a9a72aeaee59ff6cb3582b35133d50; // ERC1967 Beacon slot
+    bytes32 private constant BEACON_SLOT = bytes32(uint256(keccak256("eip1967.proxy.beacon")) - 1);
 
     /**
      * @dev Beacon Proxy Owner only function, allows the Beacon Proxy Owner to initialize the firewall admin in the following cases:
