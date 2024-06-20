@@ -1,0 +1,15 @@
+{
+    "name": "firewall-integration-tests",
+    "version": "1.0.0",
+    "private": true,
+    "author": "Ironblocks LTD",
+    "devDependencies": {
+        "@ironblocks/firewall-consumer": "^1.0.13",
+        "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+        "@openzeppelin/contracts": "^5.0.2",
+        "@openzeppelin/contracts-upgradeable": "^5.0.2",
+        "@openzeppelin/hardhat-upgrades": "^3.1.1",
+        "glob": "^10.4.1",
+        "hardhat": "^2.22.5"
+    }
+}

@@ -4,7 +4,8 @@
     "description": "Ironblocks' monorepo for the Firewall's smart contracts",
     "private": true,
     "workspaces": [
-        "packages/*"
+        "packages/*",
+        "tests"
     ],
     "author": "Ironblocks LTD",
     "devDependencies": {
