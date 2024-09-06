@@ -31,7 +31,7 @@ contract FirewallConsumerBase is IFirewallConsumer, Context {
     bytes4 private constant SUPPORTS_APPROVE_VIA_SIGNATURE_INTERFACE_ID = bytes4(0x0c908cff); // sighash of approveCallsViaSignature
 
     // This slot is special since it's used for mappings and not a single value
-    bytes32 private constant APPROVED_TARGETS_MAPPING_SLOT = bytes32(uint256(keccak256("eip1967.approved.targets")) - 1);
+    bytes32 private constant APPROVED_VENN_POLICIES_MAPPING_SLOT = bytes32(uint256(keccak256("eip1967.approved.venn.policies")) - 1);
 
     event FirewallAdminUpdated(address newAdmin);
     event FirewallUpdated(address newFirewall);
@@ -141,17 +141,17 @@ contract FirewallConsumerBase is IFirewallConsumer, Context {
 
 
     /**
-     * @dev modifier asserting that the target is approved
-     * @param target address of the target
+     * @dev modifier asserting that the Venn policy is approved
+     * @param vennPolicy address of the Venn policy
      */
-    modifier onlyApprovedTarget(address target) {
+    modifier onlyApprovedVennPolicy(address vennPolicy) {
         // We use the same logic that solidity uses for mapping locations, but we add a pseudorandom
         // constant "salt" instead of a constant placeholder so that there are no storage collisions
         // if adding this to an upgradeable contract implementation
-        bytes32 _slot = keccak256(abi.encode(APPROVED_TARGETS_MAPPING_SLOT, target));
-        bool isApprovedTarget = _getValueBySlot(_slot) != bytes32(0);
-        require(isApprovedTarget, "FirewallConsumer: Not approved target");
-        require(ERC165Checker.supportsERC165InterfaceUnchecked(target, SUPPORTS_APPROVE_VIA_SIGNATURE_INTERFACE_ID));
+        bytes32 _slot = keccak256(abi.encode(APPROVED_VENN_POLICIES_MAPPING_SLOT, vennPolicy));
+        bool isApprovedVennPolicy = _getValueBySlot(_slot) != bytes32(0);
+        require(isApprovedVennPolicy, "FirewallConsumer: Not approved Venn policy");
+        require(ERC165Checker.supportsERC165InterfaceUnchecked(vennPolicy, SUPPORTS_APPROVE_VIA_SIGNATURE_INTERFACE_ID));
         _;
     }
 
@@ -175,36 +175,36 @@ contract FirewallConsumerBase is IFirewallConsumer, Context {
     }
 
     /**
-     * @dev Allows calling an approved external target before executing a method.
+     * @dev Allows calling an approved external Venn policy before executing a method.
      *
      * This can be used for multiple purposes, but the initial one is to call `approveCallsViaSignature` before
      * executing a function, allowing synchronous transaction approvals.
      *
-     * @param target address of the target
-     * @param targetPayload payload to be sent to the target
-     * @param data data to be executed after the target call
+     * @param vennPolicy address of the Venn policy
+     * @param vennPolicyPayload payload to be sent to the Venn policy
+     * @param data data to be executed after the Venn policy call
      */
     function safeFunctionCall(
-        address target,
-        bytes calldata targetPayload,
+        address vennPolicy,
+        bytes calldata vennPolicyPayload,
         bytes calldata data
-    ) external payable onlyApprovedTarget(target) {
-        (bool success, ) = target.call(targetPayload);
+    ) external payable onlyApprovedVennPolicy(vennPolicy) {
+        (bool success, ) = vennPolicy.call(vennPolicyPayload);
         require(success);
         require(msg.sender == _msgSender(), "FirewallConsumer: No meta transactions");
         Address.functionDelegateCall(address(this), data);
     }
 
     /**
-     * @dev Allows firewall admin to set approved targets.
-     * IMPORTANT: Only set approved target if you know what you're doing. Anyone can cause this contract
-     * to send any data to an approved target.
+     * @dev Allows firewall admin to set approved Venn policies.
+     * IMPORTANT: Only set approved Venn policy if you know what you're doing. Anyone can cause this contract
+     * to send any data to an approved Venn policy.
      *
-     * @param target address of the target
-     * @param status status of the target
+     * @param vennPolicy address of the Venn policy
+     * @param status status of the Venn policy
      */
-    function setApprovedTarget(address target, bool status) external onlyFirewallAdmin {
-        bytes32 _slot = keccak256(abi.encode(APPROVED_TARGETS_MAPPING_SLOT, target));
+    function setApprovedVennPolicy(address vennPolicy, bool status) external onlyFirewallAdmin {
+        bytes32 _slot = keccak256(abi.encode(APPROVED_VENN_POLICIES_MAPPING_SLOT, vennPolicy));
         assembly {
             sstore(_slot, status)
         }

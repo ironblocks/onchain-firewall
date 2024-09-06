@@ -56,7 +56,7 @@ contract SimpleUpgradeableFirewallConsumer is IFirewallConsumer, Initializable {
     }
 
     /**
-     * @dev Allows calling an approved external target before executing a method.
+     * @dev Allows calling an approved external Venn policy before executing a method.
      *
      * This can be used for multiple purposes, but the initial one is to call `approveCallsViaSignature` before
      * executing a function, allowing synchronous transaction approvals.
@@ -64,18 +64,18 @@ contract SimpleUpgradeableFirewallConsumer is IFirewallConsumer, Initializable {
      * NOTE: If userNativeFee is non zero, functions using this must take into account that
      * the value received will be slightly less than msg.value due to the fee.
      *
-     * @param targetPayload payload to be sent to the target
-     * @param data data to be executed after the target call
+     * @param vennPolicyPayload payload to be sent to the Venn policy
+     * @param data data to be executed after the Venn policy call
      */
     function safeFunctionCall(
-        bytes calldata targetPayload,
+        bytes calldata vennPolicyPayload,
         bytes calldata data
     ) external payable {
         address firewallConsumerStorage = _getFirewallConsumerStorage();
-        address target = IFirewallConsumerStorage(firewallConsumerStorage).getApprovedTarget();
+        address vennPolicy = IFirewallConsumerStorage(firewallConsumerStorage).getApprovedVennPolicy();
         uint256 userNativeFee = IFirewallConsumerStorage(firewallConsumerStorage).getUserNativeFee();
         require(msg.value >= userNativeFee, "FirewallConsumer: Not enough native value for fee");
-        (bool success,) = target.call{value: userNativeFee}(targetPayload);
+        (bool success,) = vennPolicy.call{value: userNativeFee}(vennPolicyPayload);
         require(success);
         Address.functionDelegateCall(address(this), data);
     }

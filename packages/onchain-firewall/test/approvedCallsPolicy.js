@@ -178,7 +178,7 @@ describe('Approved Calls Policy', () => {
         });
     });
 
-    it('Firewall safeFunctionCall cannot call unapproved target', async function () {
+    it('Firewall safeFunctionCall cannot call unapproved vennPolicy', async function () {
         const depositPayload = sampleConsumerIface.encodeFunctionData('deposit()');
         const depositCallHash = ethers.utils.solidityKeccak256(
             ['address', 'address', 'address', 'bytes', 'uint256'],
@@ -213,13 +213,13 @@ describe('Approved Calls Policy', () => {
             sampleConsumer
                 .connect(addr1)
                 .safeFunctionCall(approvedCallsPolicy.address, approvePayload, depositPayload, { value: ethers.utils.parseEther('1') })
-        ).to.be.revertedWith("FirewallConsumer: Not approved target");
+        ).to.be.revertedWith("FirewallConsumer: Not approved Venn policy");
     });
 
 
-    it('Firewall safeFunctionCall cannot call approved then unapproved target', async function () {
-        await sampleConsumer.setApprovedTarget(approvedCallsPolicy.address, true);
-        await sampleConsumer.setApprovedTarget(approvedCallsPolicy.address, false);
+    it('Firewall safeFunctionCall cannot call approved then unapproved vennPolicy', async function () {
+        await sampleConsumer.setApprovedVennPolicy(approvedCallsPolicy.address, true);
+        await sampleConsumer.setApprovedVennPolicy(approvedCallsPolicy.address, false);
         const depositPayload = sampleConsumerIface.encodeFunctionData('deposit()');
         const depositCallHash = ethers.utils.solidityKeccak256(
             ['address', 'address', 'address', 'bytes', 'uint256'],
@@ -254,12 +254,12 @@ describe('Approved Calls Policy', () => {
             sampleConsumer
                 .connect(addr1)
                 .safeFunctionCall(approvedCallsPolicy.address, approvePayload, depositPayload, { value: ethers.utils.parseEther('1') })
-        ).to.be.revertedWith("FirewallConsumer: Not approved target");
+        ).to.be.revertedWith("FirewallConsumer: Not approved Venn policy");
     });
 
-    it('Firewall safeFunctionCall cannot call approved then unapproved target, but can when approved targets', async function () {
-        await sampleConsumer.setApprovedTarget(approvedCallsPolicy.address, true);
-        await sampleConsumer.setApprovedTarget(approvedCallsPolicy.address, false);
+    it('Firewall safeFunctionCall cannot call approved then unapproved vennPolicy, but can when approved vennPolicies', async function () {
+        await sampleConsumer.setApprovedVennPolicy(approvedCallsPolicy.address, true);
+        await sampleConsumer.setApprovedVennPolicy(approvedCallsPolicy.address, false);
         const depositPayload = sampleConsumerIface.encodeFunctionData('deposit()');
         const depositCallHash = ethers.utils.solidityKeccak256(
             ['address', 'address', 'address', 'bytes', 'uint256'],
@@ -294,8 +294,8 @@ describe('Approved Calls Policy', () => {
             sampleConsumer
                 .connect(addr1)
                 .safeFunctionCall(approvedCallsPolicy.address, approvePayload, depositPayload, { value: ethers.utils.parseEther('1') })
-        ).to.be.revertedWith("FirewallConsumer: Not approved target");
-        await sampleConsumer.setApprovedTarget(approvedCallsPolicy.address, true);
+        ).to.be.revertedWith("FirewallConsumer: Not approved Venn policy");
+        await sampleConsumer.setApprovedVennPolicy(approvedCallsPolicy.address, true);
         await expect(
             sampleConsumer
                 .connect(addr1)
@@ -305,7 +305,7 @@ describe('Approved Calls Policy', () => {
 
 
     it('Firewall Approved calls with signature + safeFunctionCall', async function () {
-        await sampleConsumer.setApprovedTarget(approvedCallsPolicy.address, true);
+        await sampleConsumer.setApprovedVennPolicy(approvedCallsPolicy.address, true);
         const depositPayload = sampleConsumerIface.encodeFunctionData('deposit()');
         const depositCallHash = ethers.utils.solidityKeccak256(
             ['address', 'address', 'address', 'bytes', 'uint256'],

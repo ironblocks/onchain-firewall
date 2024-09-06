@@ -28,7 +28,7 @@ contract FirewallConsumerStorage is IFirewallConsumerStorage {
     bytes32 private constant NEW_FIREWALL_ADMIN_STORAGE_SLOT = bytes32(uint256(keccak256("eip1967.new.firewall.admin")) - 1);
 
     // This slot is special since it's used for mappings and not a single value
-    bytes32 private constant APPROVED_TARGET_SLOT = bytes32(uint256(keccak256("eip1967.approved.target")) - 1);
+    bytes32 private constant APPROVED_VENN_POLICY_SLOT = bytes32(uint256(keccak256("eip1967.approved.venn.policy")) - 1);
 
     bytes32 private constant USER_NATIVE_FEE_SLOT = bytes32(uint256(keccak256("eip1967.user.native.fee")) - 1);
 
@@ -54,8 +54,8 @@ contract FirewallConsumerStorage is IFirewallConsumerStorage {
         _setAddressBySlot(FIREWALL_ADMIN_STORAGE_SLOT, _firewallAdmin);
     }
 
-    function getApprovedTarget() external view returns (address) {
-        return _getAddressBySlot(APPROVED_TARGET_SLOT);
+    function getApprovedVennPolicy() external view returns (address) {
+        return _getAddressBySlot(APPROVED_VENN_POLICY_SLOT);
     }
 
     function getUserNativeFee() external view returns (uint256) {
@@ -71,14 +71,14 @@ contract FirewallConsumerStorage is IFirewallConsumerStorage {
     }
 
     /**
-     * @dev Allows firewall admin to set target.
-     * IMPORTANT: Only set approved target if you know what you're doing. Anyone can cause this contract
-     * to send any data to an approved target.
+     * @dev Allows firewall admin to set Venn policy.
+     * IMPORTANT: Only set approved Venn policy if you know what you're doing. Anyone can cause this contract
+     * to send any data to an approved Venn policy.
      *
-     * @param target address of the target
+     * @param vennPolicy address of the Venn policy
      */
-    function setTarget(address target) external onlyFirewallAdmin {
-        _setAddressBySlot(APPROVED_TARGET_SLOT, target);
+    function setVennPolicy(address vennPolicy) external onlyFirewallAdmin {
+        _setAddressBySlot(APPROVED_VENN_POLICY_SLOT, vennPolicy);
     }
 
     /**

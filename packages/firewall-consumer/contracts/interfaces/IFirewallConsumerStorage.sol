@@ -6,6 +6,6 @@ pragma solidity ^0.8.0;
 interface IFirewallConsumerStorage {
     function getFirewallAdmin() external view returns (address);
     function getFirewall() external view returns (address);
-    function getApprovedTarget() external view returns (address);
+    function getApprovedVennPolicy() external view returns (address);
     function getUserNativeFee() external view returns (uint256);
 }
