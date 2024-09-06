@@ -31,7 +31,7 @@ contract FirewallConsumerBase is IFirewallConsumer, Context {
     bytes4 private constant SUPPORTS_APPROVE_VIA_SIGNATURE_INTERFACE_ID = bytes4(0x0c908cff); // sighash of approveCallsViaSignature
 
     // This slot is special since it's used for mappings and not a single value
-    bytes32 private constant APPROVED_VENN_POLICIES_MAPPING_SLOT = bytes32(uint256(keccak256("eip1967.approved.venn.policies")) - 1);
+    bytes32 private constant APPROVED_VENN_POLICY_SLOT = bytes32(uint256(keccak256("eip1967.approved.venn.policy")) - 1);
 
     event FirewallAdminUpdated(address newAdmin);
     event FirewallUpdated(address newFirewall);
@@ -148,7 +148,7 @@ contract FirewallConsumerBase is IFirewallConsumer, Context {
         // We use the same logic that solidity uses for mapping locations, but we add a pseudorandom
         // constant "salt" instead of a constant placeholder so that there are no storage collisions
         // if adding this to an upgradeable contract implementation
-        bytes32 _slot = keccak256(abi.encode(APPROVED_VENN_POLICIES_MAPPING_SLOT, vennPolicy));
+        bytes32 _slot = keccak256(abi.encode(APPROVED_VENN_POLICY_SLOT, vennPolicy));
         bool isApprovedVennPolicy = _getValueBySlot(_slot) != bytes32(0);
         require(isApprovedVennPolicy, "FirewallConsumer: Not approved Venn policy");
         require(ERC165Checker.supportsERC165InterfaceUnchecked(vennPolicy, SUPPORTS_APPROVE_VIA_SIGNATURE_INTERFACE_ID));
@@ -204,7 +204,7 @@ contract FirewallConsumerBase is IFirewallConsumer, Context {
      * @param status status of the Venn policy
      */
     function setApprovedVennPolicy(address vennPolicy, bool status) external onlyFirewallAdmin {
-        bytes32 _slot = keccak256(abi.encode(APPROVED_VENN_POLICIES_MAPPING_SLOT, vennPolicy));
+        bytes32 _slot = keccak256(abi.encode(APPROVED_VENN_POLICY_SLOT, vennPolicy));
         assembly {
             sstore(_slot, status)
         }
