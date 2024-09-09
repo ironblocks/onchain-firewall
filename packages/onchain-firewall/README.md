@@ -28,7 +28,7 @@ An alternative to npm is to use the GitHub repository (`ironblocks/firewall`) to
 Once installed, you can use the contracts in the library by importing them:
 
 ```solidity
-pragma solidity 0.8.19;
+pragma solidity ^0.8.19;
 
 import "@ironblocks/firewall-consumer/contracts/FirewallConsumer.sol";
 

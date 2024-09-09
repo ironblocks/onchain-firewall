@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 // See LICENSE file for full license text.
 // Copyright (c) Ironblocks 2023
-pragma solidity 0.8.19;
+pragma solidity ^0.8.19;
 
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 import {IFirewallPolicy} from "../interfaces/IFirewallPolicy.sol";
@@ -22,7 +22,7 @@ abstract contract FirewallPolicyBase is IFirewallPolicy, AccessControl {
     }
 
     constructor() {
-        _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
     /**

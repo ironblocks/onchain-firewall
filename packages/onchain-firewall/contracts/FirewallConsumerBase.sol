@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 // See LICENSE file for full license text.
 // Copyright (c) Ironblocks 2023
-pragma solidity 0.8.19;
+pragma solidity ^0.8.19;
 
 import {ERC165Checker} from "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
