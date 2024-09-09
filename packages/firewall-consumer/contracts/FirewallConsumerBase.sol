@@ -3,9 +3,9 @@
 // Copyright (c) Ironblocks 2024
 pragma solidity ^0.8;
 
-import {ERC165Checker} from "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
-import {Address} from "@openzeppelin/contracts/utils/Address.sol";
-import {Context} from "@openzeppelin/contracts/utils/Context.sol";
+import {ERC165Checker} from "../lib/openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
+import {Address} from "../lib/openzeppelin/contracts/utils/Address.sol";
+import {Context} from "../lib/openzeppelin/contracts/utils/Context.sol";
 import {IFirewall} from "./interfaces/IFirewall.sol";
 import {IFirewallConsumer} from "./interfaces/IFirewallConsumer.sol";
 

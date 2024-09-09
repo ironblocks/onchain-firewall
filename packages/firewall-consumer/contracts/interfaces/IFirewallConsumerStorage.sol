@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 // See LICENSE file for full license text.
 // Copyright (c) Ironblocks 2024
-pragma solidity ^0.8.0;
+pragma solidity ^0.8;
 
 interface IFirewallConsumerStorage {
     function getFirewallAdmin() external view returns (address);

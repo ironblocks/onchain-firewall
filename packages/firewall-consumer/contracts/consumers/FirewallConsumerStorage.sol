@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 // See LICENSE file for full license text.
 // Copyright (c) Ironblocks 2024
-pragma solidity ^0.8.0;
+pragma solidity ^0.8;
 
-import {Address} from "@openzeppelin/contracts/utils/Address.sol";
+import {Address} from "../../lib/openzeppelin/contracts/utils/Address.sol";
 import {IFirewall} from "../interfaces/IFirewall.sol";
 import {IFirewallConsumerStorage} from "../interfaces/IFirewallConsumerStorage.sol";
 
