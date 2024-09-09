@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 // See LICENSE file for full license text.
 // Copyright (c) Ironblocks 2023
-pragma solidity 0.8.19;
+pragma solidity ^0.8;
 
-import {TransparentUpgradeableProxy, StorageSlot} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
-import {Address} from "@openzeppelin/contracts/utils/Address.sol";
+import {TransparentUpgradeableProxy, StorageSlot} from "../../lib/openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+import {Address} from "../../lib/openzeppelin/contracts/utils/Address.sol";
 import {IFirewall} from "../interfaces/IFirewall.sol";
 import {IFirewallConsumer} from "../interfaces/IFirewallConsumer.sol";
 
@@ -34,7 +34,7 @@ interface IFirewallProxyIntercept {
  *
  * You can still use block explorers to opening the implementation contract
  * directly in the block explorer, and interact with it there.
- * 
+ *
  * NOTE: This proxy is intended for specific use cases, and using it comes with some
  * behaviors that are by-design different from the standard TransparentUpgradeableProxy:
  *
@@ -150,7 +150,7 @@ contract FirewallProxyIntercept is TransparentUpgradeableProxy {
             }
             assembly {
                 return(add(ret, 0x20), mload(ret))
-            } 
+            }
         } else {
             super._fallback();
         }

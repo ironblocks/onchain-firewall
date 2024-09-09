@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 // See LICENSE file for full license text.
 // Copyright (c) Ironblocks 2023
-pragma solidity 0.8.19;
+pragma solidity ^0.8;
 
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {Ownable} from "../../lib/openzeppelin/contracts/access/Ownable.sol";
 import {FirewallPolicyBase} from "./FirewallPolicyBase.sol";
 
 /**

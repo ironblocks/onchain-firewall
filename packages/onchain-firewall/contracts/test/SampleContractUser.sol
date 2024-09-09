@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
 // See LICENSE file for full license text.
 // Copyright (c) Ironblocks 2023
-pragma solidity 0.8.19;
+pragma solidity ^0.8;
 
 import {SampleConsumer} from "../samples/SampleConsumer.sol";
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
-import {Address} from "@openzeppelin/contracts/utils/Address.sol";
+import {Ownable} from "../../lib/openzeppelin/contracts/access/Ownable.sol";
+import {Address} from "../../lib/openzeppelin/contracts/utils/Address.sol";
 
 contract SampleContractUser {
 
@@ -30,4 +30,3 @@ contract SampleContractUser {
 
     receive() external payable {}
 }
-

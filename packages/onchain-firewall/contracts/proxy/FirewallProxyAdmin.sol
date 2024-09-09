@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 // See LICENSE file for full license text.
 // Copyright (c) Ironblocks 2023
-pragma solidity 0.8.19;
+pragma solidity ^0.8;
 
-import {ProxyAdmin} from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
-import {Address} from "@openzeppelin/contracts/utils/Address.sol";
+import {ProxyAdmin} from "../../lib/openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
+import {Address} from "../../lib/openzeppelin/contracts/utils/Address.sol";
 import {IFirewall} from "../interfaces/IFirewall.sol";
 import {IFirewallConsumer} from "../interfaces/IFirewallConsumer.sol";
 import {IFirewallTransparentUpgradeableProxy} from "./FirewallTransparentUpgradeableProxy.sol";

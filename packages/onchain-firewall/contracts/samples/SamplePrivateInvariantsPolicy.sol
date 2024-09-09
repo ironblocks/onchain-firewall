@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 // See LICENSE file for full license text.
 // Copyright (c) Ironblocks 2023
-pragma solidity 0.8.19;
+pragma solidity ^0.8;
 
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {Ownable} from "../../lib/openzeppelin/contracts/access/Ownable.sol";
 import {IFirewallPrivateInvariantsPolicy} from "../interfaces/IFirewallPrivateInvariantsPolicy.sol";
 
 contract SamplePrivateInvariantsPolicy is IFirewallPrivateInvariantsPolicy, Ownable {
@@ -15,7 +15,7 @@ contract SamplePrivateInvariantsPolicy is IFirewallPrivateInvariantsPolicy, Owna
         address, // We could use data, but for our simple example we dont
         bytes calldata data,
         uint256
-    ) external view override returns (bytes32[] memory) { 
+    ) external view override returns (bytes32[] memory) {
         bytes32[] memory storageSlots = sighashInvariantStorageSlots[consumer][bytes4(data)];
         return storageSlots;
     }

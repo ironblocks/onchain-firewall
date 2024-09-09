@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
 // See LICENSE file for full license text.
 // Copyright (c) Ironblocks 2023
-pragma solidity 0.8.19;
+pragma solidity ^0.8;
 
 import {FirewallConsumerBase} from "../FirewallConsumerBase.sol";
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
-import {Address} from "@openzeppelin/contracts/utils/Address.sol";
+import {Ownable} from "../../lib/openzeppelin/contracts/access/Ownable.sol";
+import {Address} from "../../lib/openzeppelin/contracts/utils/Address.sol";
 
 // Demo contract for reentrancy protection.
 contract TotallySafeContract is Ownable, FirewallConsumerBase {
@@ -24,4 +24,3 @@ contract TotallySafeContract is Ownable, FirewallConsumerBase {
         deposits[msg.sender] = 0;
     }
 }
-

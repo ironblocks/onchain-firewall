@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
 // See LICENSE file for full license text.
 // Copyright (c) Ironblocks 2023
-pragma solidity 0.8.19;
+pragma solidity ^0.8;
 
-import {ERC165Checker} from "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
-import {Address} from "@openzeppelin/contracts/utils/Address.sol";
-import {Context} from "@openzeppelin/contracts/utils/Context.sol";
+import {ERC165Checker} from "../lib/openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
+import {Address} from "../lib/openzeppelin/contracts/utils/Address.sol";
+import {Context} from "../lib/openzeppelin/contracts/utils/Context.sol";
 import {IFirewall} from "./interfaces/IFirewall.sol";
 import {IFirewallConsumer} from "./interfaces/IFirewallConsumer.sol";
 
@@ -52,7 +52,7 @@ contract FirewallConsumerBase is IFirewallConsumer, Context {
         }
         uint256 value = _msgValue();
         IFirewall(firewall).preExecution(_msgSender(), _msgData(), value);
-        _; 
+        _;
         IFirewall(firewall).postExecution(_msgSender(), _msgData(), value);
     }
 
@@ -70,7 +70,7 @@ contract FirewallConsumerBase is IFirewallConsumer, Context {
      *
      * If you have any questions on how or when to use this modifier, please refer to the Firewall's documentation
      * and/or contact our support.
-     * 
+     *
      * NOTE: Applying this modifier on functions that exit execution flow by an inline assmebly "return" call will
      * prevent the postExecution hook from running - breaking the protection provided by the firewall.
      * If you have any questions, please refer to the Firewall's documentation and/or contact our support.
@@ -83,7 +83,7 @@ contract FirewallConsumerBase is IFirewallConsumer, Context {
         }
         uint256 value = _msgValue();
         IFirewall(firewall).preExecution(_msgSender(), data, value);
-        _; 
+        _;
         IFirewall(firewall).postExecution(_msgSender(), data, value);
     }
 
@@ -100,7 +100,7 @@ contract FirewallConsumerBase is IFirewallConsumer, Context {
      *
      * If you have any questions on how or when to use this modifier, please refer to the Firewall's documentation
      * and/or contact our support.
-     * 
+     *
      * NOTE: Applying this modifier on functions that exit execution flow by an inline assmebly "return" call will
      * prevent the postExecution hook from running - breaking the protection provided by the firewall.
      * If you have any questions, please refer to the Firewall's documentation and/or contact our support.
@@ -113,7 +113,7 @@ contract FirewallConsumerBase is IFirewallConsumer, Context {
         }
         uint256 value = _msgValue();
         IFirewall(firewall).preExecution(_msgSender(), abi.encodePacked(selector), value);
-        _; 
+        _;
         IFirewall(firewall).postExecution(_msgSender(), abi.encodePacked(selector), value);
     }
 

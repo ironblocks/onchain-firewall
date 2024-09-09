@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 // See LICENSE file for full license text.
 // Copyright (c) Ironblocks 2023
-pragma solidity 0.8.19;
+pragma solidity ^0.8;
 
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IERC20} from "../../lib/openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {FirewallPolicyBase} from "./FirewallPolicyBase.sol";
 
 /**

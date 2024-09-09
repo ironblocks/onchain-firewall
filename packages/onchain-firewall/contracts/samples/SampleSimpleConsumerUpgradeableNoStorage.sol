@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: UNLICENSED
 // See LICENSE file for full license text.
 // Copyright (c) Ironblocks 2024
-pragma solidity ^0.8.0;
+pragma solidity ^0.8;
 
 import {SimpleUpgradeableFirewallConsumer, IFirewallConsumerStorage} from "../consumers/SimpleUpgradeableFirewallConsumer.sol";
-import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import {Address} from "@openzeppelin/contracts/utils/Address.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {OwnableUpgradeable} from "../../lib/openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {Address} from "../../lib/openzeppelin/contracts/utils/Address.sol";
+import {IERC20} from "../../lib/openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract SampleSimpleConsumerUpgradeableNoStorage is OwnableUpgradeable, SimpleUpgradeableFirewallConsumer {
 
@@ -22,7 +22,7 @@ contract SampleSimpleConsumerUpgradeableNoStorage is OwnableUpgradeable, SimpleU
         deposits[msg.sender] += msg.value;
     }
 
-    function withdraw(uint256 amount) external payable firewallProtected { 
+    function withdraw(uint256 amount) external payable firewallProtected {
         deposits[msg.sender] -= amount;
         Address.sendValue(payable(msg.sender), amount);
     }
