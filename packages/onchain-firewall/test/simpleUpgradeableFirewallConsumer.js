@@ -276,6 +276,7 @@ describe('Firewall Simple Consumer Upgradeable', function () {
 
         await expect(
             sampleConsumerNoStorage.connect(addr1).safeFunctionCall(
+                0,
                 approvedCallsPayload,
                 depositData,
                 { value: depositAmount }
