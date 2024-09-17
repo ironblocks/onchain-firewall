@@ -4,5 +4,5 @@
 pragma solidity ^0.8;
 
 interface IFirewallConsumer {
-    function firewallAdmin() external returns (address);
+    function firewallAdmin() external view returns (address);
 }

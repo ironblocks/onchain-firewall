@@ -73,12 +73,12 @@ contract SimpleUpgradeableFirewallConsumer is IFirewallConsumer, Initializable {
      * @param data data to be executed after the Venn policy call
      */
     function safeFunctionCall(
-        uint256 userNativeFee,
         bytes calldata vennPolicyPayload,
         bytes calldata data
     ) external payable {
         address firewallConsumerStorage = _getFirewallConsumerStorage();
         address vennPolicy = IFirewallConsumerStorage(firewallConsumerStorage).getApprovedVennPolicy();
+        uint256 userNativeFee = IFirewallConsumerStorage(firewallConsumerStorage).getUserNativeFee();
         require(msg.value >= userNativeFee, "FirewallConsumer: Not enough native value for fee");
         (bool success,) = vennPolicy.call{value: userNativeFee}(vennPolicyPayload);
         require(success);
