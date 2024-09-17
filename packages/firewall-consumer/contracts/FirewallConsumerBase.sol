@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 // See LICENSE file for full license text.
 // Copyright (c) Ironblocks 2024
-pragma solidity ^0.8;
+pragma solidity ^0.8.0;
 
 import {ERC165Checker} from "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
@@ -30,8 +30,10 @@ contract FirewallConsumerBase is IFirewallConsumer, Context {
     bytes32 private constant NEW_FIREWALL_ADMIN_STORAGE_SLOT = bytes32(uint256(keccak256("eip1967.new.firewall.admin")) - 1);
     bytes4 private constant SUPPORTS_APPROVE_VIA_SIGNATURE_INTERFACE_ID = bytes4(0x0c908cff); // sighash of approveCallsViaSignature
 
-    // This slot is special since it's used for mappings and not a single value
     bytes32 private constant APPROVED_VENN_POLICY_SLOT = bytes32(uint256(keccak256("eip1967.approved.venn.policy")) - 1);
+    bytes32 private constant APPROVED_VENN_POLICY_FEE_SLOT = bytes32(uint256(keccak256("eip1967.approved.venn.policy.fee")) - 1);
+    bytes32 private constant SAFE_FUNCTION_CALLER_SLOT = bytes32(uint256(keccak256("eip1967.safe.function.caller")) - 1);
+    bytes32 private constant SAFE_FUNCTION_CALL_FLAG_SLOT = bytes32(uint256(keccak256("eip1967.safe.function.call.flag")) - 1);
 
     event FirewallAdminUpdated(address newAdmin);
     event FirewallUpdated(address newFirewall);
@@ -142,7 +144,7 @@ contract FirewallConsumerBase is IFirewallConsumer, Context {
 
     /**
      * @dev modifier asserting that the Venn policy is approved
-     * @param vennPolicy address of the Venn policy
+     * @param vennPolicy address of Venn policy
      */
     modifier onlyApprovedVennPolicy(address vennPolicy) {
         // We use the same logic that solidity uses for mapping locations, but we add a pseudorandom
@@ -172,6 +174,8 @@ contract FirewallConsumerBase is IFirewallConsumer, Context {
     ) {
         _setAddressBySlot(FIREWALL_STORAGE_SLOT, _firewall);
         _setAddressBySlot(FIREWALL_ADMIN_STORAGE_SLOT, _firewallAdmin);
+        _setAddressBySlot(SAFE_FUNCTION_CALLER_SLOT, address(1));
+        _setValueBySlot(SAFE_FUNCTION_CALL_FLAG_SLOT, 1);
     }
 
     /**
@@ -189,10 +193,16 @@ contract FirewallConsumerBase is IFirewallConsumer, Context {
         bytes calldata vennPolicyPayload,
         bytes calldata data
     ) external payable onlyApprovedVennPolicy(vennPolicy) {
-        (bool success, ) = vennPolicy.call(vennPolicyPayload);
+        uint256 fee = uint256(_getValueBySlot(APPROVED_VENN_POLICY_FEE_SLOT));
+        require(msg.value >= fee, "FirewallConsumer: Not enough ETH for fee");
+        _setAddressBySlot(SAFE_FUNCTION_CALLER_SLOT, msg.sender);
+        _setValueBySlot(SAFE_FUNCTION_CALL_FLAG_SLOT, 2);
+        (bool success, ) = vennPolicy.call{value: fee}(vennPolicyPayload);
         require(success);
         require(msg.sender == _msgSender(), "FirewallConsumer: No meta transactions");
         Address.functionDelegateCall(address(this), data);
+        _setAddressBySlot(SAFE_FUNCTION_CALLER_SLOT, address(1));
+        _setValueBySlot(SAFE_FUNCTION_CALL_FLAG_SLOT, 1);
     }
 
     /**
@@ -210,10 +220,14 @@ contract FirewallConsumerBase is IFirewallConsumer, Context {
         }
     }
 
+    function setApprovedVennPolicyFee(uint256 fee) external onlyFirewallAdmin {
+        _setValueBySlot(APPROVED_VENN_POLICY_FEE_SLOT, fee);
+    }
+
     /**
      * @dev View function for the firewall admin
      */
-    function firewallAdmin() external override view returns (address) {
+    function firewallAdmin() external view returns (address) {
         return _getAddressBySlot(FIREWALL_ADMIN_STORAGE_SLOT);
     }
 
@@ -253,6 +267,12 @@ contract FirewallConsumerBase is IFirewallConsumer, Context {
         assembly {
             value := callvalue()
         }
+        if (uint256(_getValueBySlot(SAFE_FUNCTION_CALL_FLAG_SLOT)) == 2) {
+            if (msg.sender == _getAddressBySlot(SAFE_FUNCTION_CALLER_SLOT)) {
+                uint256 fee = uint256(_getValueBySlot(APPROVED_VENN_POLICY_FEE_SLOT));
+                value = value - fee;
+            }
+        }
     }
 
     /**
@@ -289,6 +309,12 @@ contract FirewallConsumerBase is IFirewallConsumer, Context {
     function _getAddressBySlot(bytes32 _slot) internal view returns (address _address) {
         assembly {
             _address := sload(_slot)
+        }
+    }
+
+    function _setValueBySlot(bytes32 _slot, uint256 _value) internal {
+        assembly {
+            sstore(_slot, _value)
         }
     }
 
